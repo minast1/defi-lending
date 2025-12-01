@@ -29,11 +29,15 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
-      
+
       - name: Install foundry-toolchain
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+
+      - name: Install Forge dependencies
+        working-directory: packages/foundry
+        run: forge install foundry-rs/forge-std
 
       - name: Run foundry node, deploy contracts (& generate contracts typescript output)
         env:
