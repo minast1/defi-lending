@@ -57,8 +57,9 @@ contract LendingTest is Test {
 
         //MINTS && APPROVALS
         dai.mintTo(address(this), 1000000);
-        // dai.mintTo(address(lending), 1000000);
+        dai.mintTo(address(lending), 1000000);
         dai.mintTo(address(oracle), 10000000000000000000000 ether);
+        dai.mintTo(address(flashLoanLiquidator), 1000000000 ether);
 
         dai.approve(address(dex), type(uint256).max);
 
@@ -66,12 +67,6 @@ contract LendingTest is Test {
         vm.deal(alice, 10 ether);
         vm.deal(address(oracle), 1000 ether);
     }
-
-    // function testDexInitializedWithLiquidity() public view {
-    //     assertEq(dex.totalLiquidity(), 1000 ether);
-    //     assertEq(corn.balanceOf(address(dex)), 1000000);
-    //     assertGt(dex.currentPrice(), 0);
-    // }
 
     function testAddCollateral() public {
         vm.startPrank(alice);
@@ -296,25 +291,4 @@ contract LendingTest is Test {
         // Liquidator should end with 0 dai (no leftovers)
         assertEq(dai.balanceOf(address(liquidator)), 0);
     }
-
-    // function test_ItMovesPriceDown() public {
-    //     uint256 price = dex.currentPrice();
-    //     assertGt(price, 0);
-
-    //     vm.prank(alice);
-    //     oracle.movePrice(650 ether);
-    //     uint256 newPrice = dex.currentPrice();
-    //     assertLe(newPrice, price);
-    // }
-
-    // function test_ItMovesPriceUp() public {
-    //     uint256 price = dex.currentPrice();
-    //     console.log("Price from DEX", price);
-    //     vm.prank(alice);
-    //     oracle.movePrice(-500 ether);
-
-    //     uint256 newPrice = dex.currentPrice();
-    //     console.log("New Price from DEX", newPrice);
-    //     assertGe(newPrice, price);
-    // }
 }
