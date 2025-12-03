@@ -4,9 +4,9 @@ import { NetworkOptions } from "./NetworkOptions";
 import { useWatchBalance } from "@scaffold-ui/hooks";
 import { clsx } from "clsx";
 import { ChevronDown, SquareArrowLeft, Wallet } from "lucide-react";
-import { getAddress } from "viem";
+import { formatEther, getAddress } from "viem";
 import { Address } from "viem";
-import { hardhat, sepolia } from "viem/chains";
+//import { hardhat, sepolia } from "viem/chains";
 import { useDisconnect } from "wagmi";
 import {
   ArrowTopRightOnSquareIcon,
@@ -53,11 +53,12 @@ export const AddressInfoDropdown = ({ address, displayName, blockExplorerAddress
   const { copyToClipboard: copyAddressToClipboard, isCopiedToClipboard: isAddressCopiedToClipboard } =
     useCopyToClipboard();
   const [selectingNetwork] = useState(false);
-  const { data: balance } = useWatchBalance({ address, chain: targetNetwork.id === 31337 ? hardhat : sepolia });
+  const { data: balance } = useWatchBalance({ address, chainId: targetNetwork.id });
 
   const handleDisconnect = () => {
     disconnect();
   };
+  const formattedBalance = balance ? Number(formatEther(balance.value)) : 0;
 
   return (
     <>
@@ -68,7 +69,9 @@ export const AddressInfoDropdown = ({ address, displayName, blockExplorerAddress
             <span className="text-sm font-mono text-primary">
               {isENS(displayName) ? displayName : checkSumAddress?.slice(0, 6) + "..." + checkSumAddress?.slice(-4)}
             </span>
-            <span className="text-sm font-bold text-primary border-l border-primary/30 pl-2">{balance?.value} ETH</span>
+            <span className="text-sm font-bold text-primary border-l border-primary/30 pl-2">
+              {formattedBalance.toFixed(4)} ETH
+            </span>
             <ChevronDown className="h-3 w-3 text-primary/70" />
           </button>
         </DropdownMenuTrigger>
