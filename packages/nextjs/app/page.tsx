@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
+//import Link from "next/link";
 import { Address } from "@scaffold-ui/components";
 import type { NextPage } from "next";
 import { hardhat } from "viem/chains";
 import { useAccount } from "wagmi";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+//import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth";
 
 const Home: NextPage = () => {
@@ -14,7 +14,7 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <div className="flex items-center flex-col grow pt-10">
+      <div className="min-h-screen bg-background transition-colors duration-300">
         <div className="px-5">
           <h1 className="text-center">
             <span className="block text-2xl mb-2">Welcome to</span>
@@ -49,7 +49,7 @@ const Home: NextPage = () => {
           </p>
         </div>
 
-        <div className="grow bg-base-300 w-full mt-16 px-8 py-12">
+        {/* <div className="grow bg-base-300 w-full mt-16 px-8 py-12">
           <div className="flex justify-center items-center gap-12 flex-col md:flex-row">
             <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
               <BugAntIcon className="h-8 w-8 fill-secondary" />
@@ -72,7 +72,7 @@ const Home: NextPage = () => {
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );

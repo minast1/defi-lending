@@ -1,123 +1,261 @@
+/* Tailwind v4 pipeline */
 @import "tailwindcss";
+@import "tw-animate-css";
 
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+/* ================================
+   CSS VARIABLES — DESIGN SYSTEM
+   ================================ */
 
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
-
-@theme {
-  --shadow-center: 0 0 12px -2px rgb(0 0 0 / 0.05);
-  --animate-pulse-fast: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@plugin "daisyui" {
-  themes:
-    light,
-    dark --prefersdark;
-}
-
-@plugin "daisyui/theme" {
-  name: "light";
-
-  --color-primary: #93bbfb;
-  --color-primary-content: #212638;
-  --color-secondary: #dae8ff;
-  --color-secondary-content: #212638;
-  --color-accent: #93bbfb;
-  --color-accent-content: #212638;
-  --color-neutral: #212638;
-  --color-neutral-content: #ffffff;
-  --color-base-100: #ffffff;
-  --color-base-200: #f4f8ff;
-  --color-base-300: #dae8ff;
-  --color-base-content: #212638;
-  --color-info: #93bbfb;
-  --color-success: #34eeb6;
-  --color-warning: #ffcf72;
-  --color-error: #ff8863;
-
-  --radius-field: 9999rem;
-  --radius-box: 1rem;
-  --tt-tailw: 6px;
-}
-
-@plugin "daisyui/theme" {
-  name: "dark";
-
-  --color-primary: #212638;
-  --color-primary-content: #f9fbff;
-  --color-secondary: #323f61;
-  --color-secondary-content: #f9fbff;
-  --color-accent: #4969a6;
-  --color-accent-content: #f9fbff;
-  --color-neutral: #f9fbff;
-  --color-neutral-content: #385183;
-  --color-base-100: #385183;
-  --color-base-200: #2a3655;
-  --color-base-300: #212638;
-  --color-base-content: #f9fbff;
-  --color-info: #385183;
-  --color-success: #34eeb6;
-  --color-warning: #ffcf72;
-  --color-error: #ff8863;
-
-  --radius-field: 9999rem;
-  --radius-box: 1rem;
-
-  --tt-tailw: 6px;
-  --tt-bg: var(--color-primary);
-}
-
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+  :root {
+    --background: hsl(210, 30%, 96%);
+    --foreground: hsl(220, 15%, 15%);
+
+    --card: hsl(0, 0%, 100%);
+    --card-foreground: hsl(220, 15%, 15%);
+
+    --popover: hsl(0, 0%, 100%);
+    --popover-foreground: hsl(220, 15%, 15%);
+
+    --primary: hsl(188, 85%, 48%);
+    --primary-foreground: hsl(220, 15%, 8%);
+
+    --secondary: hsl(210, 25%, 88%);
+    --secondary-foreground: hsl(220, 15%, 15%);
+
+    --muted: hsl(210, 25%, 92%);
+    --muted-foreground: hsl(220, 12%, 45%);
+
+    --accent: hsl(188, 85%, 48%);
+    --accent-foreground: hsl(220, 15%, 8%);
+
+    --destructive: hsl(0, 84%, 60%);
+    --destructive-foreground: hsl(0, 0%, 98%);
+
+    --success: hsl(142, 76%, 45%);
+    --success-foreground: hsl(0, 0%, 100%);
+
+    --warning: hsl(38, 92%, 50%);
+    --warning-foreground: hsl(220, 15%, 8%);
+
+    --border: hsl(220, 13%, 88%);
+    --input: hsl(220, 13%, 88%);
+    --ring: hsl(188, 85%, 48%);
+
+    --radius: 0.75rem;
+
+    --gradient-defi: linear-gradient(135deg, hsl(188 85% 48% / 0.1), hsl(280 80% 55% / 0.1));
+
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 25% 98%));
+
+    --glow-cyan: 0 0 20px hsl(188 85% 48% / 0.3);
+    --glow-warning: 0 0 20px hsl(38 92% 50% / 0.3);
   }
 
-  p {
-    margin: 1rem 0;
+  .dark {
+    --background: hsl(222, 47%, 6%);
+    --foreground: hsl(210, 40%, 98%);
+
+    --card: hsl(220, 28%, 10%);
+    --card-foreground: hsl(210, 40%, 98%);
+
+    --popover: hsl(220, 28%, 10%);
+    --popover-foreground: hsl(210, 40%, 98%);
+
+    --primary: hsl(188, 85%, 55%);
+    --primary-foreground: hsl(220, 15%, 8%);
+
+    --secondary: hsl(220, 25%, 15%);
+    --secondary-foreground: hsl(210, 40%, 98%);
+
+    --muted: hsl(220, 25%, 15%);
+    --muted-foreground: hsl(215, 20%, 65%);
+
+    --accent: hsl(188, 85%, 55%);
+    --accent-foreground: hsl(220, 15%, 8%);
+
+    --destructive: hsl(0, 84%, 60%);
+    --destructive-foreground: hsl(0, 0%, 98%);
+
+    --success: hsl(142, 76%, 50%);
+    --success-foreground: hsl(0, 0%, 100%);
+
+    --warning: hsl(38, 92%, 55%);
+    --warning-foreground: hsl(220, 15%, 8%);
+
+    --border: hsl(220, 25%, 18%);
+    --input: hsl(220, 25%, 18%);
+    --ring: hsl(188, 85%, 55%);
+
+    --gradient-defi: linear-gradient(135deg, hsl(188, 85%, 55%, 0.15), hsl(280, 80%, 60%, 0.15));
+
+    --gradient-card: linear-gradient(145deg, hsl(220, 28%, 10%), hsl(220, 28%, 12%));
+
+    --glow-cyan: 0 0 25px hsl(188, 85%, 55%, 0.4);
+    --glow-warning: 0 0 25px hsl(38, 92%, 55%, 0.4);
+  }
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: hsl(210, 30%, 96%);
+  --foreground: hsl(220, 15%, 15%);
+
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(220, 15%, 15%);
+
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(220, 15%, 15%);
+
+  --primary: hsl(188, 85%, 48%);
+  --primary-foreground: hsl(220, 15%, 8%);
+
+  --secondary: hsl(210, 25%, 88%);
+  --secondary-foreground: hsl(220, 15%, 15%);
+
+  --muted: hsl(210, 25%, 92%);
+  --muted-foreground: hsl(220, 12%, 45%);
+
+  --accent: hsl(188, 85%, 48%);
+  --accent-foreground: hsl(220, 15%, 8%);
+
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+
+  --success: hsl(142, 76%, 45%);
+  --success-foreground: hsl(0, 0%, 100%);
+
+  --warning: hsl(38, 92%, 50%);
+  --warning-foreground: hsl(220, 15%, 8%);
+
+  --border: hsl(220, 13%, 88%);
+  --input: hsl(220, 13%, 88%);
+  --ring: hsl(188, 85%, 48%);
+
+  --radius: 0.75rem;
+
+  --gradient-defi: linear-gradient(135deg, hsl(188 85% 48% / 0.1), hsl(280 80% 55% / 0.1));
+
+  --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 25% 98%));
+
+  --glow-cyan: 0 0 20px hsl(188 85% 48% / 0.3);
+  --glow-warning: 0 0 20px hsl(38 92% 50% / 0.3);
+}
+
+.dark {
+  --background: hsl(222, 47%, 6%);
+  --foreground: hsl(210, 40%, 98%);
+
+  --card: hsl(220, 28%, 10%);
+  --card-foreground: hsl(210, 40%, 98%);
+
+  --popover: hsl(220, 28%, 10%);
+  --popover-foreground: hsl(210, 40%, 98%);
+
+  --primary: hsl(188, 85%, 55%);
+  --primary-foreground: hsl(220, 15%, 8%);
+
+  --secondary: hsl(220, 25%, 15%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+
+  --muted: hsl(220, 25%, 15%);
+  --muted-foreground: hsl(215, 20%, 65%);
+
+  --accent: hsl(188, 85%, 55%);
+  --accent-foreground: hsl(220, 15%, 8%);
+
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+
+  --success: hsl(142, 76%, 50%);
+  --success-foreground: hsl(0, 0%, 100%);
+
+  --warning: hsl(38, 92%, 55%);
+  --warning-foreground: hsl(220, 15%, 8%);
+
+  --border: hsl(220, 25%, 18%);
+  --input: hsl(220, 25%, 18%);
+  --ring: hsl(188, 85%, 55%);
+
+  --gradient-defi: linear-gradient(135deg, hsl(188, 85%, 55%, 0.15), hsl(280, 80%, 60%, 0.15));
+
+  --gradient-card: linear-gradient(145deg, hsl(220, 28%, 10%), hsl(220, 28%, 12%));
+
+  --glow-cyan: 0 0 25px hsl(188, 85%, 55%, 0.4);
+  --glow-warning: 0 0 25px hsl(38, 92%, 55%, 0.4);
+}
+
+/* ================================
+   BASE STYLES
+   ================================ */
+
+@layer base {
+  * {
+    @apply border-border;
   }
 
   body {
-    min-height: 100vh;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4 {
-    margin-bottom: 0.5rem;
-    line-height: 1;
+    @apply bg-background text-foreground font-sans antialiased;
   }
 }
 
-:root,
-[data-theme] {
-  background: var(--color-base-200);
-}
+/* ================================
+   UTILITIES (Tailwind v4 ok)
+   ================================ */
 
-.btn {
-  @apply shadow-md;
-}
+@layer components {
+  .glow-cyan {
+    box-shadow: var(--glow-cyan);
+  }
+  .glow-warning {
+    box-shadow: var(--glow-warning);
+  }
 
-.btn.btn-ghost {
-  @apply shadow-none;
-}
+  .gradient-defi {
+    background: var(--gradient-defi);
+  }
 
-.link {
-  text-underline-offset: 2px;
-}
-
-.link:hover {
-  opacity: 80%;
+  .gradient-card {
+    background: var(--gradient-card);
+  }
 }
