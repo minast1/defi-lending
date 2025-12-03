@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { AddressQRCodeModal } from "./AddressQRCodeModal";
 import { NetworkOptions } from "./NetworkOptions";
 import { useWatchBalance } from "@scaffold-ui/hooks";
+import { clsx } from "clsx";
 import { ChevronDown, SquareArrowLeft, Wallet } from "lucide-react";
 import { getAddress } from "viem";
 import { Address } from "viem";
@@ -49,7 +49,7 @@ export const AddressInfoDropdown = ({ address, displayName, blockExplorerAddress
   const [showQrCodeModal, setShowQrCodeModal] = useState(false);
   const checkSumAddress = getAddress(address);
   const { targetNetwork } = useTargetNetwork();
-  const router = useRouter();
+
   const { copyToClipboard: copyAddressToClipboard, isCopiedToClipboard: isAddressCopiedToClipboard } =
     useCopyToClipboard();
   const [selectingNetwork] = useState(false);
@@ -57,10 +57,6 @@ export const AddressInfoDropdown = ({ address, displayName, blockExplorerAddress
 
   const handleDisconnect = () => {
     disconnect();
-    //setIsConnected(false);
-    localStorage.removeItem("isWalletConnected");
-
-    router.push("/");
   };
 
   return (
@@ -82,7 +78,7 @@ export const AddressInfoDropdown = ({ address, displayName, blockExplorerAddress
               e.preventDefault();
               copyAddressToClipboard(checkSumAddress);
             }}
-            className={selectingNetwork ? "hidden" : ""}
+            className={clsx(selectingNetwork ? "hidden" : "")}
           >
             {isAddressCopiedToClipboard ? (
               <>
@@ -91,19 +87,19 @@ export const AddressInfoDropdown = ({ address, displayName, blockExplorerAddress
               </>
             ) : (
               <>
-                <DocumentDuplicateIcon className="text-xl font-normal h-6 w-4 ml-2 sm:ml-0" aria-hidden="true" />
+                <DocumentDuplicateIcon className="text-xl font-normal h-6 w-4 mr-2 sm:ml-0" aria-hidden="true" />
                 <span className="whitespace-nowrap">Copy address</span>
               </>
             )}
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <DropdownMenuItem className="w-full hover:bg-transparent" onSelect={() => setShowQrCodeModal(true)}>
-              <QrCodeIcon className="h-6 w-4 sm:ml-0" />
-              View QR Code
-            </DropdownMenuItem>
+
+          <DropdownMenuItem className="w-full bg-transparent" onSelect={() => setShowQrCodeModal(true)}>
+            <QrCodeIcon className="h-6 w-4 mr-2 sm:ml-0" />
+            View QR Code
           </DropdownMenuItem>
-          <DropdownMenuItem className={selectingNetwork ? "hidden" : ""}>
-            <ArrowTopRightOnSquareIcon className="h-6 w-4 ml-2 sm:ml-0" />
+
+          <DropdownMenuItem className={clsx(selectingNetwork ? "hidden" : "")}>
+            <ArrowTopRightOnSquareIcon className="h-6 w-4 mr-2 sm:ml-0" />
             <a target="_blank" href={blockExplorerAddressLink} rel="noopener noreferrer" className="whitespace-nowrap">
               View on Block Explorer
             </a>
@@ -113,16 +109,16 @@ export const AddressInfoDropdown = ({ address, displayName, blockExplorerAddress
             <DropdownMenuGroup>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger
-                  className="text-sm"
+                  className="text-sm hover:bg-accent/30"
                   // onSelect={() => {
                   //   setSelectingNetwork(true);
                   // }}
                 >
-                  <ArrowsRightLeftIcon className="h-6 w-4 ml-2 sm:ml-0" />
+                  <ArrowsRightLeftIcon className="h-6 w-4 mr-2 sm:ml-0" />
                   Switch Network
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="mr-2">
+                  <DropdownMenuSubContent className="ml-1">
                     <NetworkOptions />
                   </DropdownMenuSubContent>
                 </DropdownMenuPortal>
@@ -131,7 +127,7 @@ export const AddressInfoDropdown = ({ address, displayName, blockExplorerAddress
           ) : null}
 
           <DropdownMenuItem onSelect={handleDisconnect} className={selectingNetwork ? "hidden" : ""}>
-            <SquareArrowLeft className="h-6 w-4 ml-2 sm:ml-0" /> Disconnect
+            <SquareArrowLeft className="h-6 w-4 mr-2 sm:ml-0" /> Disconnect
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
