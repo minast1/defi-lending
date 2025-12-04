@@ -8,43 +8,42 @@ import "../contracts/Dai.sol";
 import "../contracts/MovePrice.sol";
 import "../contracts/FlashLoanLiquidator.sol";
 
-contract DexTest is Test {
+contract TVLFuzzTest is Test {
     Dai public dai;
     DEX public dex;
     Lending public lending;
     address alice = makeAddr("alice");
     MovePrice public oracle;
     address bob = makeAddr("bob");
-    address liquidator = makeAddr("liquidator");
-    FlashLoanLiquidator public flashLoanLiquidator;
 
     function setUp() public {
         //INITIALIZATIONS
         dai = new Dai();
         dex = new DEX(address(dai));
         lending = new Lending(address(dex), address(dai));
-        oracle = new MovePrice(address(dex), address(dai));
-        flashLoanLiquidator = new FlashLoanLiquidator(
-            address(lending),
-            address(dex),
-            address(dai)
-        );
 
         //MINTS && APPROVALS
         dai.mintTo(address(this), 1000000);
-        // dai.mintTo(address(lending), 1000000);
-        dai.mintTo(address(oracle), 10000000000000000000000 ether);
+
+        dai.mintTo(address(lending), 100 ether);
 
         dai.approve(address(dex), type(uint256).max);
 
         dex.innit{value: 1000 ether}(1000000);
-        vm.deal(alice, 10 ether);
-        vm.deal(address(oracle), 1000 ether);
+        vm.deal(address(this), 20 ether);
     }
 
-    function testDexInitializedWithLiquidity() public view {
-        assertEq(dex.totalLiquidity(), 1000 ether);
-        assertEq(dai.balanceOf(address(dex)), 1000000);
-        assertGt(dex.currentPrice(), 0);
+    function testFuzz_tvlmath(uint256 collateralWei) public {
+        collateralWei = bound(collateralWei, 1, 6 ether);
+        //priceDAI = bound(priceDAI, 1 ether, 10_000 ether);
+
+        vm.prank(address(this));
+        lending.addCollateral{value: collateralWei}();
+
+        uint256 daiInContract = dai.balanceOf(address(lending));
+        uint256 daiInEth = (daiInContract * 1e18) / dex.currentPrice();
+
+        uint256 expected = collateralWei + daiInEth;
+        assertEq(lending.getTVLInETH(), expected);
     }
 }

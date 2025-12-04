@@ -13,7 +13,7 @@ export const metadata = getMetadata({
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   return (
     <html suppressHydrationWarning className={``}>
-      <body>
+      <body className="bg-skybg dark:bg-background min-h-screen transition-colors duration-300">
         {/* <ThemeProvider enableSystem> */}
         <ScaffoldEthAppWithProviders>{children}</ScaffoldEthAppWithProviders>
         {/* </ThemeProvider> */}

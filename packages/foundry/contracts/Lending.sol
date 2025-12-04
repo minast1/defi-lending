@@ -34,6 +34,10 @@ contract Lending is Ownable {
     mapping(address => uint256) public s_userCollateral; // User's collateral balance
     mapping(address => uint256) public s_userBorrowed; // User's borrowed dai balance
 
+    //System totals for TVL
+    uint256 public totalSystemCollateral; //ETH (wei)
+    uint256 public totalSystemBorrowed; ///Dai units
+
     event CollateralAdded(
         address indexed user,
         uint256 indexed amount,
@@ -65,8 +69,6 @@ contract Lending is Ownable {
     constructor(address _dex, address _dai) Ownable(msg.sender) {
         dex = DEX(_dex);
         dai = Dai(_dai);
-        dai.approve(address(this), type(uint256).max);
-        // dai.mintTo(address(this), 1_000_000_000_000 ether);
     }
 
     /**
@@ -74,10 +76,10 @@ contract Lending is Ownable {
      */
     function addCollateral() public payable {
         if (msg.value == 0) revert Lending__InvalidAmount();
-        uint256 amount = msg.value;
-        uint256 price = dex.currentPrice();
-        s_userCollateral[msg.sender] += amount;
-        emit CollateralAdded(msg.sender, amount, price);
+
+        s_userCollateral[msg.sender] += msg.value;
+        totalSystemCollateral += msg.value;
+        emit CollateralAdded(msg.sender, msg.value, dex.currentPrice());
     }
 
     /**
@@ -87,15 +89,16 @@ contract Lending is Ownable {
     function withdrawCollateral(uint256 amount) public {
         if (amount == 0 || amount > s_userCollateral[msg.sender])
             revert Lending__InvalidAmount();
-        uint256 price = dex.currentPrice();
+
         s_userCollateral[msg.sender] -= amount;
-        uint256 debt = s_userBorrowed[msg.sender];
-        if (debt > 0) {
+        totalSystemCollateral -= amount;
+
+        if (s_userBorrowed[msg.sender] > 0) {
             _validatePosition(msg.sender);
         }
         (bool success, ) = msg.sender.call{value: amount}("");
         if (!success) revert Lending__TransferFailed();
-        emit CollateralWithdrawn(msg.sender, amount, price);
+        emit CollateralWithdrawn(msg.sender, amount, dex.currentPrice());
     }
 
     /**
@@ -156,7 +159,10 @@ contract Lending is Ownable {
             revert Lending__NoCollateralDEposited();
 
         s_userBorrowed[msg.sender] += borrowAmount;
+        totalSystemBorrowed += borrowAmount;
+
         _validatePosition(msg.sender);
+
         bool sent = dai.transfer(msg.sender, borrowAmount);
         if (!sent) revert Lending__BorrowingFailed();
         emit AssetBorrowed(msg.sender, borrowAmount, price);
@@ -172,6 +178,7 @@ contract Lending is Ownable {
         if (s_userBorrowed[msg.sender] == 0)
             revert Lending__NoCollateralDEposited();
         s_userBorrowed[msg.sender] -= repayAmount;
+        totalSystemBorrowed -= repayAmount;
         // _validatePosition(msg.sender);
         uint256 price = dex.currentPrice();
         bool sent = dai.transferFrom(msg.sender, address(this), repayAmount);
@@ -197,10 +204,11 @@ contract Lending is Ownable {
         uint256 collateralValue = calculateCollateralValue(user);
         uint256 userCollateral = s_userCollateral[user];
 
+        ///Pull dai from liquidator
         bool sent = dai.transferFrom(msg.sender, address(this), userDebt);
         if (!sent) revert Lending__TransferFailed();
 
-        //Calculate proportional ETH for the debt being repaid
+        //Compute proportional ETH that corresponds to the paid debt
         uint256 collateralPurchased = (userDebt * userCollateral) /
             collateralValue;
         //10% reward for liquidators
@@ -213,7 +221,11 @@ contract Lending is Ownable {
             : totalPayout;
 
         s_userCollateral[user] -= totalPayout;
+        totalSystemCollateral -= totalPayout;
+
+        totalSystemBorrowed -= userDebt;
         s_userBorrowed[user] = 0;
+
         //Send ETH to liquidator
         (bool success, ) = payable(msg.sender).call{value: totalPayout}("");
         if (!success) revert Lending__TransferFailed();
@@ -244,5 +256,31 @@ contract Lending is Ownable {
 
         //Get the loan back - Should revert if it doesn't have enough
         dai.transferFrom(address(_recipient), address(this), _amount);
+    }
+
+    /* ========== TVL getters ========== */
+    // Total Value Locked expressed in DAI (DAI units, not scaled): collateral (ETH->DAI) + DAI balance held by lending contract
+    function getTVLInDAI() public view returns (uint256) {
+        uint256 price = dex.currentPrice(); // DAI per ETH (token units)
+        uint256 collateralValueDAI = (totalSystemCollateral * price) / 1e18;
+        uint256 daiInContract = dai.balanceOf(address(this));
+        return collateralValueDAI + daiInContract;
+    }
+
+    // TVL expressed in ETH (wei): total collateral + value of DAI held converted to ETH
+    function getTVLInETH() public view returns (uint256) {
+        uint256 price = dex.currentPrice(); // DAI per ETH
+        uint256 daiInContract = dai.balanceOf(address(this));
+        // convert dai -> ETH: (dai * 1e18) / price
+        uint256 daiInEth = (daiInContract * 1e18) / price;
+        return totalSystemCollateral + daiInEth;
+    }
+
+    // helpers to expose internal totals for tests / UI
+    function getTotalSystemCollateral() external view returns (uint256) {
+        return totalSystemCollateral;
+    }
+    function getTotalSystemBorrowed() external view returns (uint256) {
+        return totalSystemBorrowed;
     }
 }
