@@ -1,5 +1,6 @@
 import React from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import clsx from "clsx";
 import { formatEther } from "viem";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth";
 import { useEthUsdPrice } from "~~/hooks/useEthUsdPrice";
@@ -43,11 +44,13 @@ const EthUsDToggle = ({ ethValue, className = "" }: TProps) => {
     <Tooltip>
       <TooltipTrigger asChild>
         <button
-          className={`btn btn-sm btn-ghost hover:cursor-pointer flex flex-col font-normal items-center hover:bg-transparent ${className}`}
+          className={clsx(
+            "btn btn-sm btn-ghost hover:cursor-pointer flex flex-col font-normal items-center hover:bg-transparent",
+          )}
           onClick={toggle}
           type="button"
         >
-          <div className="w-full flex items-center justify-center">
+          <div className={clsx("w-full flex items-center justify-center", className)}>
             {showUsd ? (
               <>
                 <span className="text-[0.8em] font-bold mr-1">$</span>

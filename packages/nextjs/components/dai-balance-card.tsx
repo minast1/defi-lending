@@ -1,12 +1,24 @@
 import React from "react";
 import { Card, CardContent } from "./ui/card";
 import { Wallet } from "lucide-react";
+import { useAccount } from "wagmi";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { tokenName } from "~~/utils/constant";
 
 const DaiBalanceCard = () => {
+  const { address } = useAccount();
+
+  const { data: daiBalance } = useScaffoldReadContract({
+    contractName: "Dai",
+    functionName: "balanceOf",
+    args: [address],
+  });
+
+  //const tokenBalance = `${Math.floor(Number(formatEther(cornBalance || 0n)) * 100) / 100}`;
   return (
     <Card
       className="relative overflow-hidden border-border bg-card hover:border-primary/50 transition-all duration-300 group"
-      style={{ animationDelay: `${0 * 100}ms` }}
+      style={{ animationDelay: `${1 * 100}ms` }}
     >
       <CardContent className="px-4">
         <div className="flex items-start justify-between">
@@ -25,8 +37,8 @@ const DaiBalanceCard = () => {
                           {stat.change}
                         </span> */}
         </div>
-        <p className="text-sm text-muted-foreground mb-1">Your Dai Balance</p>
-        <p className="text-2xl font-bold text-foreground">$42.5M</p>
+        <p className="text-sm text-muted-foreground mb-1">{`Your ${tokenName} Balance`}</p>
+        <p className="text-2xl font-bold text-foreground">{`${daiBalance} ${tokenName}`}</p>
       </CardContent>
     </Card>
   );

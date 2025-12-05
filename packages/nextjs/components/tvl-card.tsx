@@ -53,7 +53,7 @@ const TVLCard = () => {
                   : "bg-success/10 text-success"
             }`}
           >
-            {percentChange}
+            {percentChange}%
           </span>
         </div>
         <p className="text-sm text-muted-foreground mb-1">Total Value Locked</p>
