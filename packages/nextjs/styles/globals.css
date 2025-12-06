@@ -110,6 +110,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-success-foreground: var(--success-foreground);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);

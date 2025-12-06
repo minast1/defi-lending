@@ -8,7 +8,7 @@ import { tokenName } from "~~/utils/constant";
 const DaiBalanceCard = () => {
   const { address } = useAccount();
 
-  const { data: daiBalance } = useScaffoldReadContract({
+  const { data: daiBalance, isLoading } = useScaffoldReadContract({
     contractName: "Dai",
     functionName: "balanceOf",
     args: [address],
@@ -37,8 +37,17 @@ const DaiBalanceCard = () => {
                           {stat.change}
                         </span> */}
         </div>
-        <p className="text-sm text-muted-foreground mb-1">{`Your ${tokenName} Balance`}</p>
-        <p className="text-2xl font-bold text-foreground">{`${daiBalance} ${tokenName}`}</p>
+        <p className="text-sm text-muted-foreground mb-1">{`Your ${tokenName} Wallet`}</p>
+        {isLoading ? (
+          <div className="animate-pulse flex space-x-4">
+            <div className="rounded-md bg-slate-300 h-6 w-6"></div>
+            <div className="flex items-center space-y-6">
+              <div className="h-2 w-28 bg-slate-300 rounded-sm"></div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-2xl font-bold text-foreground">{`${daiBalance} ${tokenName}`}</p>
+        )}
       </CardContent>
     </Card>
   );

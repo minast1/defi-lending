@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import EthUsDToggle from "./eth-usd-toggle";
 import { Card, CardContent } from "./ui/card";
 import { TrendingUp } from "lucide-react";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 const TVLCard = () => {
-  const prevTvlRef = useRef<bigint | null>(null);
   const [direction, setDirection] = useState<"up" | "down" | "same">("same");
   const [percentChange, setPercentChange] = useState<number>(0);
 
@@ -17,7 +16,7 @@ const TVLCard = () => {
   useEffect(() => {
     if (tvl === undefined || tvl === null) return;
 
-    const prev = prevTvlRef.current;
+    const prev = JSON.parse(localStorage.getItem("tvl") ?? "{}");
     if (prev !== null) {
       if (tvl > prev) setDirection("up");
       else if (tvl < prev) setDirection("down");
@@ -31,7 +30,7 @@ const TVLCard = () => {
       }
     }
 
-    prevTvlRef.current = tvl;
+    localStorage.setItem("tvl", tvl.toString());
   }, [tvl]);
 
   return (
@@ -51,7 +50,7 @@ const TVLCard = () => {
                 : direction == "down"
                   ? "bg-destructive/10 text-destructive"
                   : "bg-success/10 text-success"
-            }`}
+            } ${percentChange == 0 ? "hidden" : ""}`}
           >
             {percentChange}%
           </span>
