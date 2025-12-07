@@ -4,7 +4,9 @@
 //import { Address } from "@scaffold-ui/components";
 import type { NextPage } from "next";
 import DaiBalanceCard from "~~/components/dai-balance-card";
+import DepositWithdraw from "~~/components/deposit-and-withdraw";
 import HealthFactorCard from "~~/components/health-factor-card";
+import LiquidationMonitor from "~~/components/liquidation-monitor";
 import PriceCard from "~~/components/price-card";
 //import { hardhat } from "viem/chains";
 //import { useAccount } from "wagmi";
@@ -19,13 +21,23 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="container mx-auto px-4 py-8 space-y-10">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
           <TVLCard />
           <DaiBalanceCard />
           <PriceCard />
           <HealthFactorCard />
+        </div>
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Deposit & Withdraw */}
+
+          <DepositWithdraw />
+
+          <div className="md:col-span-2">
+            <LiquidationMonitor />
+          </div>
         </div>
       </div>
     </>

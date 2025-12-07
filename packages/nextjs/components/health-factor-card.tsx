@@ -58,7 +58,7 @@ const HealthFactorCard = () => {
         ) : (
           <>
             <p className="text-xl font-bold text-foreground">{ratio}%</p>
-            <p className="text-xs text-muted-foreground">{`Required : 120%`}</p>
+            <p className="text-xs text-muted-foreground">{`Threshold : 120%`}</p>
           </>
         )}
       </CardContent>

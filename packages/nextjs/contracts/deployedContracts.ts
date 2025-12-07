@@ -1213,7 +1213,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 3,
     },
     MovePrice: {
       address: "0x8ce361602b935680e8dec218b820ff5056beb7af",
@@ -1257,7 +1257,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 3,
     },
     FlashLoanLiquidator: {
       address: "0xe1aa25618fa0c7a1cfdab5d6b456af611873b629",
@@ -1318,7 +1318,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 3,
     },
   },
 } as const;

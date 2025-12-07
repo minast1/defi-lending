@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "./ui/card";
 import { Wallet } from "lucide-react";
+import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { tokenName } from "~~/utils/constant";
@@ -14,7 +15,7 @@ const DaiBalanceCard = () => {
     args: [address],
   });
 
-  //const tokenBalance = `${Math.floor(Number(formatEther(cornBalance || 0n)) * 100) / 100}`;
+  const tokenBalance = `${Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100}`;
   return (
     <Card
       className="relative overflow-hidden border-border bg-card hover:border-primary/50 transition-all duration-300 group"
@@ -46,7 +47,7 @@ const DaiBalanceCard = () => {
             </div>
           </div>
         ) : (
-          <p className="text-2xl font-bold text-foreground">{`${daiBalance} ${tokenName}`}</p>
+          <p className="text-2xl font-bold text-foreground">{`${tokenBalance} ${tokenName}`}</p>
         )}
       </CardContent>
     </Card>
