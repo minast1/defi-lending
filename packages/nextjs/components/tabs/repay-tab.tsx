@@ -7,13 +7,17 @@ import { Spinner } from "../ui/spinner";
 import { TabsContent } from "../ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { formatEther, parseEther } from "viem";
+import { encodeFunctionData, formatEther, parseEther } from "viem";
 import { useAccount, useWaitForTransactionReceipt } from "wagmi";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useBatchTx } from "~~/hooks/use-batchTx";
+import { useGetWalletCapabilities } from "~~/hooks/use-getwallet-capabilities";
 import { CreateRepaySchema, createRepaySchema } from "~~/lib/schema";
 
 const RepayTab = () => {
   const { address } = useAccount();
+  const { executeBatch } = useBatchTx();
+  const { supportsAtomicActions } = useGetWalletCapabilities();
 
   const { data: ethPrice } = useScaffoldReadContract({
     contractName: "DEX",
@@ -26,6 +30,10 @@ const RepayTab = () => {
 
   const { data: basicLendingContract } = useDeployedContractInfo({
     contractName: "Lending",
+  });
+
+  const { data: daiContract } = useDeployedContractInfo({
+    contractName: "Dai",
   });
 
   const { data: daiBalance } = useScaffoldReadContract({
@@ -41,13 +49,13 @@ const RepayTab = () => {
   const {
     writeContractAsync: writeLendingContract,
     isPending,
-    data: hash,
+    data: lendingMutationHash,
   } = useScaffoldWriteContract({
     contractName: "Lending",
   });
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash,
+    hash: lendingMutationHash,
   });
 
   useEffect(() => {
@@ -57,7 +65,7 @@ const RepayTab = () => {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmed]);
+  }, [isConfirmed, form]);
 
   //Reset form Default values when they are ready
   useEffect(() => {
@@ -67,19 +75,44 @@ const RepayTab = () => {
   }, [daiBalance, form]);
 
   const handleBorrow = async (data: CreateRepaySchema) => {
-    // console.log(data);
-    //implement Eip-1725 for compatible wallets and fall back to this logic
-    try {
-      await writeDaiContract({
-        functionName: "approve",
-        args: [basicLendingContract?.address, parseEther(data.availableBalance.toString())],
+    // If wallet supports batching – use EIP-5792
+
+    if (supportsAtomicActions) {
+      console.log("Batch Tx Initiated ....");
+      executeBatch({
+        calls: [
+          {
+            to: daiContract?.address as `0x${string}`,
+            data: encodeFunctionData({
+              abi: daiContract?.abi as any,
+              functionName: "approve",
+              args: [basicLendingContract?.address, parseEther(data.availableBalance.toString())],
+            }),
+          },
+          {
+            to: basicLendingContract?.address as `0x${string}`,
+            data: encodeFunctionData({
+              abi: basicLendingContract?.abi as any,
+              functionName: "repayDai",
+              args: [parseEther(data.amount.toString())],
+            }),
+          },
+        ],
       });
-      await writeLendingContract({
-        functionName: "repayDai",
-        args: [parseEther(data.amount.toString())],
-      });
-    } catch (error) {
-      console.error("Error repaying dai:", error);
+    } else {
+      //Not Supported
+      try {
+        await writeDaiContract({
+          functionName: "approve",
+          args: [basicLendingContract?.address, parseEther(data.availableBalance.toString())],
+        });
+        await writeLendingContract({
+          functionName: "repayDai",
+          args: [parseEther(data.amount.toString())],
+        });
+      } catch (error) {
+        console.error("Error repaying dai:", error);
+      }
     }
   };
 
