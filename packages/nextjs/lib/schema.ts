@@ -1,13 +1,15 @@
 import * as z from "zod";
+import { collateralRatio } from "~~/utils/constant";
+import { calculatePositionRatio } from "~~/utils/helpers";
 
 export const createDepositSchema = z
   .object({
     address: z.string(),
-    amount: z.coerce.number<number>(),
+    amount: z.coerce.number<number>({ error: "Please enter a valid amount" }),
     availableBalance: z.number().nonnegative({ message: "Invalid available balance" }),
   })
   .check(ctx => {
-    if (ctx.value.amount > ctx.value.availableBalance) {
+    if (ctx.value.amount > ctx.value.availableBalance || ctx.value.amount == ctx.value.availableBalance) {
       ctx.issues.push({
         code: "custom",
         message: "Insufficient Eth Balance",
@@ -31,5 +33,49 @@ export const createWithdrawSchema = createDepositSchema
       });
     }
   });
+
+export const createBorrowSchema = createDepositSchema
+  .extend({
+    price: z.number(),
+    collateral: z.number(),
+  })
+  .omit({ availableBalance: true, address: true })
+  .check(ctx => {
+    const positionRatio = calculatePositionRatio(ctx.value.collateral, ctx.value.amount, ctx.value.price);
+    if (positionRatio < collateralRatio) {
+      ctx.issues.push({
+        code: "custom",
+        message: `Unsafe position ratio for borrow amount ${ctx.value.amount}`,
+        input: ctx.value.amount,
+        path: ["amount"],
+      });
+    }
+  });
+
+export const createRepaySchema = createDepositSchema
+  .extend({})
+  .omit({ address: true })
+  .check(ctx => {
+    if (ctx.value.amount > ctx.value.availableBalance) {
+      ctx.issues.push({
+        code: "custom",
+        message: "Amount exceeds available balance",
+        input: ctx.value.amount,
+        path: ["amount"],
+      });
+
+      if (ctx.value.amount > ctx.value.availableBalance) {
+        ctx.issues.push({
+          code: "custom",
+          message: "Account has no borrowed assets",
+          input: ctx.value.amount,
+          path: ["amount"],
+        });
+      }
+    }
+  });
+
+export type CreateRepaySchema = z.infer<typeof createRepaySchema>;
+export type CreateBorrowSchema = z.infer<typeof createBorrowSchema>;
 export type CreateDepositSchema = z.infer<typeof createDepositSchema>;
 export type CreateWithdrawalSchema = z.infer<typeof createWithdrawSchema>;

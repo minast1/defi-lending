@@ -39,7 +39,7 @@ const DepositWithdraw = () => {
   };
 
   return (
-    <Card className="border-border bg-card animate-fade-in">
+    <Card className="border-border bg-card animate-fade-in gap-3">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <span className="text-primary">●</span>

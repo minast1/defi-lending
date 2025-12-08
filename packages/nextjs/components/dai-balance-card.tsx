@@ -1,6 +1,6 @@
 import React from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Card, CardContent } from "./ui/card";
-import { Wallet } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
@@ -24,7 +24,10 @@ const DaiBalanceCard = () => {
       <CardContent className="px-4">
         <div className="flex items-start justify-between">
           <div className="p-3 rounded-xl bg-card border border-border group-hover:glow-cyan transition-all text-primary">
-            <Wallet className="h-5 w-5" />
+            <Avatar className="w-5 h-5">
+              <AvatarImage src="https://assets.coingecko.com/coins/images/9956/small/4943.png" alt="Dai" />
+              <AvatarFallback>Dai</AvatarFallback>
+            </Avatar>
           </div>
           {/* <span
                           className={`text-xs font-medium px-2 py-1 rounded-full ${

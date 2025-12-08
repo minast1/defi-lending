@@ -1,15 +1,12 @@
 "use client";
 
-//import Link from "next/link";
-//import { Address } from "@scaffold-ui/components";
 import type { NextPage } from "next";
+import BorrowRepay from "~~/components/borrow-repay";
+import CollateralCard from "~~/components/collateral-card";
 import DaiBalanceCard from "~~/components/dai-balance-card";
 import DepositWithdraw from "~~/components/deposit-and-withdraw";
 import HealthFactorCard from "~~/components/health-factor-card";
 import LiquidationMonitor from "~~/components/liquidation-monitor";
-import PriceCard from "~~/components/price-card";
-//import { hardhat } from "viem/chains";
-//import { useAccount } from "wagmi";
 import TVLCard from "~~/components/tvl-card";
 
 //import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
@@ -26,7 +23,7 @@ const Home: NextPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
           <TVLCard />
           <DaiBalanceCard />
-          <PriceCard />
+          <CollateralCard />
           <HealthFactorCard />
         </div>
         {/* Main Grid */}
@@ -38,6 +35,7 @@ const Home: NextPage = () => {
           <div className="md:col-span-2">
             <LiquidationMonitor />
           </div>
+          <BorrowRepay />
         </div>
       </div>
     </>

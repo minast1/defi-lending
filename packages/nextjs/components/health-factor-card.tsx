@@ -4,7 +4,6 @@ import { Activity } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
-import { useEthUsdPrice } from "~~/hooks/useEthUsdPrice";
 import { calculatePositionRatio } from "~~/utils/helpers";
 
 const HealthFactorCard = () => {
@@ -20,9 +19,18 @@ const HealthFactorCard = () => {
     functionName: "s_userBorrowed",
     args: [address],
   });
-  const { data: ethPrice } = useEthUsdPrice();
+
+  const { data: ethPrice } = useScaffoldReadContract({
+    contractName: "DEX",
+    functionName: "currentPrice",
+  });
+
   const borrowedAmount = Number(formatEther(debt || 0n));
-  const ratio = calculatePositionRatio(Number(formatEther(userCollateral || 0n)), borrowedAmount, ethPrice);
+  const ratio = calculatePositionRatio(
+    Number(formatEther(userCollateral || 0n)),
+    borrowedAmount,
+    Number(formatEther(ethPrice || 0n)),
+  );
   return (
     <Card
       className="relative overflow-hidden border-border bg-card hover:border-primary/50 transition-all duration-300 group"
@@ -44,7 +52,7 @@ const HealthFactorCard = () => {
                     : "bg-success/10 text-success"
             }`}
           >
-            {ratio > 150 ? "Safe" : ratio < 120 ? "Liquidatable" : ratio >= 120 && ratio <= 150 ? "Healthy" : ""}
+            {ratio > 150 ? "Safe" : ratio < 120 ? "Liquidatable" : ratio >= 120 && ratio <= 150 ? "Unhealthy" : ""}
           </span>
         </div>
         <p className="text-sm text-muted-foreground mb-1">Collateralization Ratio (%)</p>
@@ -57,7 +65,7 @@ const HealthFactorCard = () => {
           </div>
         ) : (
           <>
-            <p className="text-xl font-bold text-foreground">{ratio}%</p>
+            <p className="text-xl font-bold text-foreground">{ratio.toFixed(4)}%</p>
             <p className="text-xs text-muted-foreground">{`Threshold : 120%`}</p>
           </>
         )}

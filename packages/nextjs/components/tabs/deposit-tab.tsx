@@ -54,6 +54,7 @@ const DepositTab = ({ asset, balance }: TProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConfirmed]);
   const handleDeposit = async (data: CreateDepositSchema) => {
+    //console.log(data)
     try {
       await writeLendingContract({
         functionName: "addCollateral",
