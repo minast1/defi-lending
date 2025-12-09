@@ -65,7 +65,7 @@ const HealthFactorCard = () => {
           </div>
         ) : (
           <>
-            <p className="text-xl font-bold text-foreground">{ratio.toFixed(4)}%</p>
+            <p className="text-xl font-bold text-foreground">{ratio.toFixed(2)}%</p>
             <p className="text-xs text-muted-foreground">{`Threshold : 120%`}</p>
           </>
         )}

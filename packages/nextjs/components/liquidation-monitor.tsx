@@ -1,40 +1,105 @@
-import { Badge } from "./ui/badge";
+import { useEffect, useState } from "react";
+import { useScaffoldEventHistory } from "../hooks/scaffold-eth/useScaffoldEventHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Skeleton } from "./ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import { AlertTriangle } from "lucide-react";
-
-const liquidatablePositions = [
-  {
-    user: "0x742d...3f8c",
-    collateral: "$12,450",
-    debt: "$11,200",
-    healthFactor: 1.11,
-    threshold: "1.0",
-  },
-  {
-    user: "0x8a3e...9b2d",
-    collateral: "$8,320",
-    debt: "$7,850",
-    healthFactor: 1.06,
-    threshold: "1.0",
-  },
-  {
-    user: "0x5f1c...4e7a",
-    collateral: "$15,680",
-    debt: "$14,200",
-    healthFactor: 1.1,
-    threshold: "1.0",
-  },
-  {
-    user: "0x9d2a...6c1b",
-    collateral: "$6,540",
-    debt: "$6,100",
-    healthFactor: 1.07,
-    threshold: "1.0",
-  },
-];
+import UserPosition from "./user-position";
+import { AlertTriangle, Users } from "lucide-react";
+import { formatEther } from "viem";
+import { useAccount } from "wagmi";
+import { useScaffoldReadContract, useScaffoldWatchContractEvent } from "~~/hooks/scaffold-eth";
 
 const LiquidationMonitor = () => {
+  const { address: connectedAddress } = useAccount();
+  const [users, setUsers] = useState<string[]>([]);
+
+  const {
+    data: events,
+    isLoading: isLoading,
+    // error: errorReadingEvents,
+  } = useScaffoldEventHistory({
+    contractName: "Lending",
+    eventName: "CollateralAdded",
+    watch: true,
+    blockData: false,
+    transactionData: false,
+    receiptData: false,
+  });
+
+  useScaffoldWatchContractEvent({
+    contractName: "Lending",
+    eventName: "CollateralAdded",
+    onLogs: logs => {
+      console.log("collateral added");
+      setUsers(prevUsers => {
+        const uniqueUsers = new Set([...prevUsers]);
+        logs
+          .map(event => {
+            return event?.args.user;
+          })
+          .filter((user): user is string => !!user)
+          .forEach(user => uniqueUsers.add(user));
+        return uniqueUsers.size > prevUsers.length ? Array.from(uniqueUsers) : prevUsers;
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (!events) return;
+
+    setUsers(prevUsers => {
+      const uniqueUsers = new Set([...prevUsers]);
+      events
+        .map(event => {
+          return event?.args.user;
+        })
+        .filter((user): user is string => !!user)
+        .forEach(user => uniqueUsers.add(user));
+      return uniqueUsers.size > prevUsers.length ? Array.from(uniqueUsers) : prevUsers;
+    });
+  }, [events, users]);
+
+  const { data: ethPrice } = useScaffoldReadContract({
+    contractName: "DEX",
+    functionName: "currentPrice",
+  });
+
+  const LoadingSkeleton = () => (
+    <>
+      {[...Array(4)].map((_, i) => (
+        <TableRow key={i}>
+          <TableCell>
+            <Skeleton className="h-4 w-24" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-16" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-16" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-6 w-12" />
+          </TableCell>
+          <TableCell className="text-right">
+            <Skeleton className="h-4 w-8 ml-auto" />
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  );
+
+  const EmptyState = () => (
+    <TableRow>
+      <TableCell colSpan={5} className="h-32">
+        <div className="flex flex-col items-center justify-center text-muted-foreground">
+          <Users className="h-10 w-10 mb-2 opacity-50" />
+          <p className="text-sm font-medium">No positions at risk</p>
+          <p className="text-xs">All users have healthy collateralization ratios</p>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+
   return (
     <Card className="border-border bg-card animate-fade-in">
       <CardHeader>
@@ -51,24 +116,25 @@ const LiquidationMonitor = () => {
                 <TableHead>User</TableHead>
                 <TableHead>Collateral</TableHead>
                 <TableHead>Debt</TableHead>
-                <TableHead>Health Factor</TableHead>
-                <TableHead className="text-right">Threshold</TableHead>
+                <TableHead>Ratio</TableHead>
+                <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {liquidatablePositions.map((position, index) => (
-                <TableRow key={index} className="hover:bg-muted/30">
-                  <TableCell className="font-mono text-sm">{position.user}</TableCell>
-                  <TableCell className="text-primary font-medium">{position.collateral}</TableCell>
-                  <TableCell className="text-warning font-medium">{position.debt}</TableCell>
-                  <TableCell>
-                    <Badge variant={position.healthFactor < 1.08 ? "destructive" : "outline"} className="font-mono">
-                      {position.healthFactor.toFixed(2)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground">{position.threshold}</TableCell>
-                </TableRow>
-              ))}
+              {isLoading || events === undefined ? (
+                <LoadingSkeleton />
+              ) : users.length === 0 ? (
+                <EmptyState />
+              ) : (
+                users.map((position, index) => (
+                  <UserPosition
+                    key={index}
+                    user={position}
+                    ethPrice={Number(formatEther(ethPrice || 0n))}
+                    connectedAddress={connectedAddress || ""}
+                  />
+                ))
+              )}
             </TableBody>
           </Table>
         </div>

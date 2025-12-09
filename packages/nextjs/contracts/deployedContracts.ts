@@ -1257,7 +1257,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 3,
+      deployedOnBlock: 2,
     },
     FlashLoanLiquidator: {
       address: "0xe1aa25618fa0c7a1cfdab5d6b456af611873b629",
@@ -1318,7 +1318,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 3,
     },
   },
 } as const;
