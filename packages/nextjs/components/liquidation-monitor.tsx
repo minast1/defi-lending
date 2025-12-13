@@ -101,7 +101,7 @@ const LiquidationMonitor = () => {
   );
 
   return (
-    <Card className="border-border bg-card animate-fade-in">
+    <Card className="border-border bg-card animate-fade-in h-[410px] overflow-y-scroll">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-destructive" />

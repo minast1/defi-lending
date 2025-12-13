@@ -1,5 +1,6 @@
 import React from "react";
-
+import { usePathname } from "next/navigation";
+import clsx from "clsx";
 //import Link from "next/link";
 //import { useFetchNativeCurrencyPrice } from "@scaffold-ui/hooks";
 //import { hardhat } from "viem/chains";
@@ -7,7 +8,8 @@ import React from "react";
 //import { HeartIcon } from "@heroicons/react/24/outline";
 //import { SwitchTheme } from "~~/components/SwitchTheme";
 //import { BuidlGuidlLogo } from "~~/components/assets/BuidlGuidlLogo";
-//import { Faucet } from "~~/components/scaffold-eth";
+import { Faucet } from "~~/components/scaffold-eth";
+
 //import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 
 /**
@@ -17,11 +19,14 @@ export const Footer = () => {
   //const { targetNetwork } = useTargetNetwork();
   //const isLocalNetwork = targetNetwork.id === hardhat.id;
   //const { price: nativeCurrencyPrice } = useFetchNativeCurrencyPrice();
-
+  const pathname = usePathname();
   return (
     <footer className="border-t border-border mt-16 py-6">
       <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
         <p>LendingPool Dashboard • Built for DeFi • Powered by Smart Contracts</p>
+        <div className={clsx("ml-auto ", pathname === "/" && "hidden")}>
+          <Faucet />
+        </div>
       </div>
     </footer>
     // <div className="min-h-0 py-5 px-1 mb-11 lg:mb-0">

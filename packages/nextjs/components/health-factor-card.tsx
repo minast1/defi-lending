@@ -34,7 +34,7 @@ const HealthFactorCard = () => {
   return (
     <Card
       className="relative overflow-hidden border-border bg-card hover:border-primary/50 transition-all duration-300 group"
-      style={{ animationDelay: `${0 * 100}ms` }}
+      style={{ animationDelay: `${3 * 100}ms` }}
     >
       <CardContent className="px-4">
         <div className="flex items-start justify-between">
@@ -43,16 +43,16 @@ const HealthFactorCard = () => {
           </div>
           <span
             className={`text-xs font-medium px-2 py-1 rounded-full ${
-              ratio > 150
+              ratio >= 200
                 ? "bg-success/10 text-success"
                 : ratio < 120
                   ? "bg-destructive/10 text-destructive"
-                  : ratio >= 120 && ratio <= 150
+                  : ratio < 200
                     ? "bg-warning/10 text-warning"
                     : "bg-success/10 text-success"
             }`}
           >
-            {ratio > 150 ? "Safe" : ratio < 120 ? "Liquidatable" : ratio >= 120 && ratio <= 150 ? "Unhealthy" : ""}
+            {ratio >= 200 ? "Safe" : ratio < 120 ? "Liquidatable" : ratio < 200 ? "Unhealthy" : ""}
           </span>
         </div>
         <p className="text-sm text-muted-foreground mb-1">Collateralization Ratio (%)</p>
@@ -65,7 +65,7 @@ const HealthFactorCard = () => {
           </div>
         ) : (
           <>
-            <p className="text-xl font-bold text-foreground">{ratio.toFixed(2)}%</p>
+            <p className="text-xl font-bold text-foreground">{ratio == Infinity ? "∞" : ratio.toFixed(2)}%</p>
             <p className="text-xs text-muted-foreground">{`Threshold : 120%`}</p>
           </>
         )}

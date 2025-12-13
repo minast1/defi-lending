@@ -3,6 +3,7 @@
 import type { NextPage } from "next";
 import BorrowRepay from "~~/components/borrow-repay";
 import CollateralCard from "~~/components/collateral-card";
+import CollateralVizCard from "~~/components/collateral-viz-card";
 import DaiBalanceCard from "~~/components/dai-balance-card";
 import DepositWithdraw from "~~/components/deposit-and-withdraw";
 import HealthFactorCard from "~~/components/health-factor-card";
@@ -36,6 +37,9 @@ const Home: NextPage = () => {
             <LiquidationMonitor />
           </div>
           <BorrowRepay />
+          <div className="md:col-span-2">
+            <CollateralVizCard />
+          </div>
         </div>
       </div>
     </>
