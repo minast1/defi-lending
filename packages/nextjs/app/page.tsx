@@ -9,20 +9,23 @@ import DepositWithdraw from "~~/components/deposit-and-withdraw";
 import HealthFactorCard from "~~/components/health-factor-card";
 import LiquidationMonitor from "~~/components/liquidation-monitor";
 import TVLCard from "~~/components/tvl-card";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 //import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 //import { useTargetNetwork } from "~~/hooks/scaffold-eth";
 
 const Home: NextPage = () => {
-  // const { address: connectedAddress } = useAccount();
-  //const { targetNetwork } = useTargetNetwork();
+  const { data: tvl } = useScaffoldReadContract({
+    contractName: "Lending",
+    functionName: "getTVLInETH",
+  });
 
   return (
     <>
       <div className="container mx-auto px-4 py-8 space-y-10">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
-          <TVLCard />
+          <TVLCard currentTvl={tvl} />
           <DaiBalanceCard />
           <CollateralCard />
           <HealthFactorCard />

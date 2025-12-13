@@ -5,9 +5,9 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGr
 //import { Button } from "./ui/button";
 //import { Input } from "./ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { useFetchNativeCurrencyPrice } from "@scaffold-ui/hooks";
 import clsx from "clsx";
 import { ArrowLeftRight } from "lucide-react";
-import { useEthUsdPrice } from "~~/hooks/useEthUsdPrice";
 
 // Fetch ETH price in USD (Alchemy or any API)
 
@@ -56,9 +56,10 @@ export function EtherInput({
   const [transitoryDisplayValue, setTransitoryDisplayValue] = useState<string>();
 
   // Fetch ETH price using React Query
-  const { data: price, isLoading: isLoadingPrice } = useEthUsdPrice();
+  // const { data: price, isLoading: isLoadingPrice } = useEthUsdPrice();
+  const { price: nativeCurrencyPrice, isLoading: isLoadingPrice } = useFetchNativeCurrencyPrice();
 
-  const finalPrice = price ?? 0;
+  const finalPrice = nativeCurrencyPrice ?? 0;
 
   /** display value shown in UI */
   const displayValue = useMemo(() => {

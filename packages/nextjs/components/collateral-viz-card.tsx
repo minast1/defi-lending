@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 //import { Progress } from "./ui/progress";
 //import { collateralRatio } from "~~/utils/constant";
 import { Skeleton } from "./ui/skeleton";
-import { useFetchNativeCurrencyPrice } from "@scaffold-ui/hooks";
+//import { useFetchNativeCurrencyPrice } from "@scaffold-ui/hooks";
 import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
@@ -16,8 +16,8 @@ import { calculatePositionRatio } from "~~/utils/helpers";
 
 const CollateralVizCard = () => {
   const { address: user } = useAccount();
-  const { price: nativeCurrencyPrice } = useFetchNativeCurrencyPrice();
-  console.log(nativeCurrencyPrice);
+  // const { price: nativeCurrencyPrice } = useFetchNativeCurrencyPrice();
+  // console.log(nativeCurrencyPrice);
 
   const { data: userCollateral } = useScaffoldReadContract({
     contractName: "Lending",

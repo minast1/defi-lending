@@ -44,7 +44,7 @@ const PriceChange = ({ asset, currentPrice }: TProps) => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPrice]);
-  console.log(percentChange, direction);
+
   return (
     <span
       className={`text-xs flex items-center gap-0.5 ${direction === "up" ? "text-success" : direction === "down" ? "text-destructive" : "text-muted-foreground"}`}
