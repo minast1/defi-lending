@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
 const BorrowRepay = () => {
   return (
-    <Card className="border-border bg-card animate-fade-in gap-3 max-h-[290px]">
+    <Card className="border-border bg-card animate-fade-in gap-3 max-h-[280px]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <span className="text-warning">●</span>
@@ -19,7 +19,7 @@ const BorrowRepay = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="borrow" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-3">
+          <TabsList className="grid w-full grid-cols-2 mb-2">
             <TabsTrigger value="borrow">Borrow</TabsTrigger>
             <TabsTrigger value="repay">Repay</TabsTrigger>
           </TabsList>

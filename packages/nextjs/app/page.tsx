@@ -8,6 +8,7 @@ import DaiBalanceCard from "~~/components/dai-balance-card";
 import DepositWithdraw from "~~/components/deposit-and-withdraw";
 import HealthFactorCard from "~~/components/health-factor-card";
 import LiquidationMonitor from "~~/components/liquidation-monitor";
+import TransferSwap from "~~/components/transfer-swap";
 import TVLCard from "~~/components/tvl-card";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
@@ -39,7 +40,11 @@ const Home: NextPage = () => {
           <div className="md:col-span-2">
             <LiquidationMonitor />
           </div>
-          <BorrowRepay />
+          <div className="md:grid-rows-2 space-y-6">
+            <BorrowRepay />
+            <TransferSwap />
+          </div>
+
           <div className="md:col-span-2">
             <CollateralVizCard />
           </div>
