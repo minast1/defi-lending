@@ -82,7 +82,7 @@ const TVLCard = ({ currentTvl }: { currentTvl: bigint | undefined }) => {
                 : direction == "down"
                   ? "bg-destructive/10 text-destructive"
                   : "bg-success/10 text-success"
-            } ${percentChange == 0 ? "hidden" : ""}`}
+            } ${percentChange == 0 || percentChange == Infinity ? "hidden" : ""}`}
           >
             {direction === "up" ? (
               <TrendingUp className="h-3 w-3" />
