@@ -80,6 +80,7 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button onClick={async () => await fetch("/api/bot/", { method: "POST" })}>start Market Simulator</Button>
           <RainbowKitCustomConnectButton />
           {isLocalNetwork && <FaucetButton />}
           <Button

@@ -703,7 +703,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 4,
     },
     Lending: {
       address: "0xb19b36b1456e65e3a6d514d3f715f204bd59f431",
@@ -1257,7 +1257,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 4,
     },
     FlashLoanLiquidator: {
       address: "0xe1aa25618fa0c7a1cfdab5d6b456af611873b629",
@@ -1318,7 +1318,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 4,
     },
   },
 } as const;

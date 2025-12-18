@@ -48,8 +48,8 @@ const CollateralVizCard = () => {
         ).toFixed(1);
 
   //const isPositionSafe = ratio == "N/A" || Number(ratio) >= collateralRatio;
-
-  const priceOfOneDai = price ? parseEther((1 / Number(formatEther(price))).toString()) : undefined;
+  const rawPrice = price ? 1 / Number(formatEther(price)) : undefined;
+  const priceOfOneDai = rawPrice ? parseEther(rawPrice.toFixed(4).replace(/\.?0+$/, "")) : undefined;
   const adjustPrice = async (isIncrease: boolean) => {
     if (price === undefined) {
       console.error("Price is undefined");

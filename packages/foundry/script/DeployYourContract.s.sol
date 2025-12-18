@@ -42,7 +42,7 @@ contract DeployYourContract is ScaffoldETHDeploy {
         dai.mintTo(address(deployer), 10_000_000 ether);
 
         // Mint some tokens to MovePrice
-        dai.mintTo(address(i_movePrice), 10_000_000_0000 ether);
+        dai.mintTo(address(i_movePrice), 10_000_000_000_000 ether);
 
         // Mint tokens for Lending contract buffer
         dai.mintTo(address(i_lending), 1000000 ether);

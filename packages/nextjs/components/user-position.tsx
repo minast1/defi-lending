@@ -117,7 +117,7 @@ const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
           variant={"outline"}
           className={clsx(
             "text-destructive rounded-4xl h-6 text-xs border-red-600 hover:bg-red-600/30 hover:cursor-pointer",
-            connectedAddress === user && "hidden",
+            (connectedAddress === user || isPositionSafe) && "hidden",
           )}
           disabled={isPositionSafe}
           onClick={liquidatePosition}
