@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
+import { SwitchTheme } from "./SwitchTheme";
 //import Image from "next/image";
 //import Link from "next/link";
 import { Button } from "./ui/button";
@@ -76,7 +77,7 @@ export const Header = () => {
             L
           </div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            LendingPool
+            Lamma
           </h1>
         </div>
 
@@ -90,14 +91,7 @@ export const Header = () => {
           </Button>
           <RainbowKitCustomConnectButton />
           {isLocalNetwork && <FaucetButton />}
-          <Button
-            variant="ghost"
-            size="icon"
-            // onClick={toggleTheme}
-            className="rounded-full"
-          >
-            {/* {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />} */}
-          </Button>
+          <SwitchTheme />
         </div>
       </div>
     </header>

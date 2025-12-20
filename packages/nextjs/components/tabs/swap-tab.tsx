@@ -211,10 +211,10 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
                     <Input
                       placeholder="Buy ETH"
                       id="eth"
-                      // value={field.value?.toString() ?? ""}
+                      value={field.value?.toString() ?? "0"}
                       onFocus={() => form.setValue("activeField", "ETH")}
-                      //onChange={field.onChange}
-                      {...field}
+                      onChange={field.onChange}
+                      // {...field}
                       className="text-lg"
                       aria-invalid={fieldState.invalid}
                     />
