@@ -4,6 +4,7 @@ import React, { useRef } from "react";
 //import Image from "next/image";
 //import Link from "next/link";
 import { Button } from "./ui/button";
+import { Bot } from "lucide-react";
 //import { usePathname } from "next/navigation";
 import { hardhat } from "viem/chains";
 //import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
@@ -80,8 +81,12 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button className="bg-primary-50" onClick={async () => await fetch("/api/bot/", { method: "POST" })}>
-            start Market Simulator
+          <Button
+            className="hover:bg-warning/20 hover:cursor-pointer bg-warning/10 border border-warning/50 text-warning flex items-center text-sm"
+            onClick={async () => await fetch("/api/bot/", { method: "POST" })}
+          >
+            <Bot className="h-5 w-5" />
+            Market Simulator
           </Button>
           <RainbowKitCustomConnectButton />
           {isLocalNetwork && <FaucetButton />}
