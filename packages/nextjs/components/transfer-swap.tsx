@@ -2,21 +2,27 @@ import SwapTab from "./tabs/swap-tab";
 import TransferTab from "./tabs/transfer-tab";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+import { useWatchBalance } from "@scaffold-ui/hooks";
 import { ArrowRightLeft, Send } from "lucide-react";
 import { formatEther } from "viem";
+import { useAccount } from "wagmi";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
-// const assets = [
-//   { symbol: "ETH", balance: 5.24, icon: "Ξ" },
-//   { symbol: "DAI", balance: 2450.0, icon: "◈" },
-//   { symbol: "USDC", balance: 1200.0, icon: "$" },
-// ];
-
 const TransferSwap = () => {
+  const { address } = useAccount();
+
   const { data: ETHprice } = useScaffoldReadContract({
     contractName: "DEX",
     functionName: "currentPrice",
   });
+
+  const { data: balance } = useWatchBalance({ address }); ///Eth balance
+  const { data: daiBalance } = useScaffoldReadContract({
+    contractName: "Dai",
+    functionName: "balanceOf",
+    args: [address],
+  });
+
   return (
     <Card className="border-border bg-card animate-fade-in">
       <CardHeader>
@@ -39,7 +45,11 @@ const TransferSwap = () => {
           </TabsList>
 
           <TransferTab />
-          <SwapTab ETHprice={Number(formatEther(ETHprice || 0n))} />
+          <SwapTab
+            ETHprice={Number(formatEther(ETHprice || 0n))}
+            daiBalance={Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100}
+            balance={Number(balance?.formatted)}
+          />
         </Tabs>
       </CardContent>
     </Card>

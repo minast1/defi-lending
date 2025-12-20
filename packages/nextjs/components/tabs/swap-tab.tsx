@@ -6,27 +6,17 @@ import { Input } from "../ui/input";
 import { Spinner } from "../ui/spinner";
 import { TabsContent } from "../ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useWatchBalance } from "@scaffold-ui/hooks";
 import { ArrowDownUp, ArrowRightLeft } from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { encodeFunctionData, formatEther, parseEther } from "viem";
-import { useAccount } from "wagmi";
-import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { encodeFunctionData, parseEther } from "viem";
+import { useDeployedContractInfo, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useBatchTx } from "~~/hooks/use-batchTx";
 import { useGetWalletCapabilities } from "~~/hooks/use-getwallet-capabilities";
 import { CreateSwapSchema, createSwapSchema } from "~~/lib/schema";
 
-const SwapTab = ({ ETHprice }: { ETHprice: number }) => {
-  const { address } = useAccount();
+const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance: number; daiBalance: number }) => {
   const { supportsAtomicActions } = useGetWalletCapabilities();
   const { executeBatch } = useBatchTx();
-
-  const { data: balance } = useWatchBalance({ address }); ///Eth balance
-  const { data: daiBalance } = useScaffoldReadContract({
-    contractName: "Dai",
-    functionName: "balanceOf",
-    args: [address],
-  });
 
   const { writeContractAsync: writeDEXContract, isPending } = useScaffoldWriteContract({
     contractName: "DEX",
@@ -43,11 +33,11 @@ const SwapTab = ({ ETHprice }: { ETHprice: number }) => {
   });
 
   const handleSwap = async (data: CreateSwapSchema) => {
-    if (data.selected === "ETH") {
+    if (data.activeField === "ETH") {
       await writeDEXContract({
         functionName: "swap",
-        args: [parseEther(data.buy.amount.toString())],
-        value: parseEther(data.buy.amount.toString()),
+        args: [parseEther(data.eth.amount.toString())],
+        value: parseEther(data.eth.amount.toString()),
       });
     } else {
       console.log("Swapping DAI to ETH....");
@@ -60,7 +50,7 @@ const SwapTab = ({ ETHprice }: { ETHprice: number }) => {
               data: encodeFunctionData({
                 abi: daiContract?.abi as any,
                 functionName: "approve",
-                args: [dexContract?.address, parseEther(data.sell.availableBalance.toString())],
+                args: [dexContract?.address, parseEther(data.dai.availableBalance.toString())],
               }),
             },
             {
@@ -68,7 +58,7 @@ const SwapTab = ({ ETHprice }: { ETHprice: number }) => {
               data: encodeFunctionData({
                 abi: dexContract?.abi as any,
                 functionName: "swap",
-                args: [parseEther(data.sell.amount.toString())],
+                args: [parseEther(data.dai.amount.toString())],
               }),
             },
           ],
@@ -79,11 +69,11 @@ const SwapTab = ({ ETHprice }: { ETHprice: number }) => {
         try {
           await writeDaiContract({
             functionName: "approve",
-            args: [dexContract?.address, parseEther(data.sell.availableBalance.toString())],
+            args: [dexContract?.address, parseEther(data.dai.availableBalance.toString())],
           });
           await writeDEXContract({
             functionName: "swap",
-            args: [parseEther(data.sell.amount.toString())],
+            args: [parseEther(data.dai.amount.toString())],
           });
         } catch (error) {
           console.error("Error repaying dai:", error);
@@ -106,79 +96,82 @@ const SwapTab = ({ ETHprice }: { ETHprice: number }) => {
   const form = useForm<CreateSwapSchema>({
     resolver: zodResolver(createSwapSchema),
     defaultValues: {
-      sell: {
-        amount: 0.0,
-        availableBalance: 0,
+      activeField: "DAI",
+      dai: {
+        amount: "0",
+        availableBalance: daiBalance,
       },
-      buy: {
-        amount: 0.0,
-        availableBalance: 0,
+      eth: {
+        amount: "0",
+        availableBalance: balance,
       },
     },
     mode: "onChange",
   });
   //const selectedAsset = useWatch({ control: form.control, name: "selected" });
-  const sellAmount = useWatch({ control: form.control, name: "sell.amount" });
-  const buyAmount = useWatch({ control: form.control, name: "buy.amount" });
-  const selectedAsset = useWatch({ control: form.control, name: "selected" });
+  const daiAmount = useWatch({ control: form.control, name: "dai.amount" });
+  const ethAmount = useWatch({ control: form.control, name: "eth.amount" });
+  const activeField = useWatch({ control: form.control, name: "activeField" });
 
+  /** Sync ETH when DAI changes */
   useEffect(() => {
-    if (!sellAmount) {
-      form.setValue("buy.amount", 0);
-      return;
+    if (activeField !== "DAI") return;
+    // const ethVal =  || "0";
+    if (!daiAmount || isNaN(Number(daiAmount))) {
+      form.setValue("eth.amount", "0");
     }
 
-    const ethVal = tokenToETH(String(sellAmount));
-
-    form.setValue("buy.amount", Number(ethVal));
-    return;
+    form.setValue("eth.amount", tokenToETH(String(daiAmount)), { shouldValidate: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sellAmount]);
+  }, [daiAmount, activeField]);
 
+  /** Sync DAI when ETH changes */
   useEffect(() => {
-    if (!buyAmount) {
-      form.setValue("sell.amount", 0);
+    if (activeField !== "ETH") {
+      ////form.setValue("eth.amount", "0");
       return;
     }
+    if (!ethAmount || isNaN(Number(ethAmount))) {
+      form.setValue("dai.amount", "0");
+    }
 
-    const daiVal = ethToToken(String(buyAmount));
-    form.setValue("sell.amount", Number(daiVal));
-    return;
+    form.setValue("dai.amount", ethToToken(String(ethAmount)), { shouldValidate: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buyAmount]);
-  //Watch and set default available balances
+  }, [ethAmount, activeField]);
+
+  //Update balances if props change
   useEffect(() => {
-    if (!balance || !daiBalance) return;
-    form.setValue("sell.availableBalance", Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100);
-    form.setValue("buy.availableBalance", Number(balance.formatted));
-  }, [balance, daiBalance, form]);
+    form.setValue("dai.availableBalance", daiBalance);
+    form.setValue("eth.availableBalance", balance);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [balance, daiBalance]);
 
   return (
     <TabsContent value="swap" className="space-y-1">
-      {/* From Asset */}
+      {/* DAI input */}
       <form onSubmit={form.handleSubmit(handleSwap)}>
         <FieldGroup className="gap-3">
           <Controller
             control={form.control}
-            name="sell.amount"
+            name="dai.amount"
             render={({ field, fieldState }) => (
               <div className="p-3 rounded-lg bg-muted/30 border border-border space-y-2">
                 <Field className="space-y-0" data-invalid={fieldState.invalid}>
                   <div className="flex justify-between text-sm">
                     {/* <FieldLabel className="text-sm text-inherit">Sell Dai</FieldLabel> */}
                     <span className="text-muted-foreground text-xs">
-                      Available Balance: {Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100} DAI
+                      Available Balance: {daiBalance?.toString()} DAI
                     </span>
                   </div>
                   <div className="flex gap-2">
                     <Input
                       placeholder="Sell Dai"
-                      value={field.value?.toString() ?? ""}
-                      onChange={val => {
-                        form.setValue("selected", "DAI");
-                        field.onChange(val);
-                      }}
+                      id="dai"
+                      //value={field.value?.toString() ?? ""}
+                      onFocus={() => form.setValue("activeField", "DAI")}
+                      //onChange={field.onChange}
                       className="text-lg"
+                      {...field}
                       aria-invalid={fieldState.invalid}
                     />
 
@@ -206,24 +199,22 @@ const SwapTab = ({ ETHprice }: { ETHprice: number }) => {
           </div>
           <Controller
             control={form.control}
-            name="buy.amount"
+            name="eth.amount"
             render={({ field, fieldState }) => (
               <div className="p-3 rounded-lg bg-muted/30 border border-border space-y-2">
                 <Field className="space-y-0" data-invalid={fieldState.invalid}>
                   <div className="flex justify-between text-sm">
                     {/* <FieldLabel className="text-sm text-inherit">Buy ETH</FieldLabel> */}
-                    <span className="text-muted-foreground text-xs">
-                      Available Balance: {Number(balance?.formatted).toFixed(4)} ETH
-                    </span>
+                    <span className="text-muted-foreground text-xs">Available Balance: {balance?.toFixed(4)} ETH</span>
                   </div>
                   <div className="flex gap-2">
                     <Input
                       placeholder="Buy ETH"
-                      value={field.value?.toString() ?? ""}
-                      onChange={val => {
-                        form.setValue("selected", "ETH");
-                        field.onChange(val);
-                      }}
+                      id="eth"
+                      // value={field.value?.toString() ?? ""}
+                      onFocus={() => form.setValue("activeField", "ETH")}
+                      //onChange={field.onChange}
+                      {...field}
                       className="text-lg"
                       aria-invalid={fieldState.invalid}
                     />
@@ -251,7 +242,7 @@ const SwapTab = ({ ETHprice }: { ETHprice: number }) => {
               <>
                 <Spinner className="mr-2" /> ...Swapping
               </>
-            ) : selectedAsset == "ETH" ? (
+            ) : activeField == "ETH" ? (
               `Swap ETH`
             ) : (
               `Swap DAI`

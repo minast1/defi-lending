@@ -91,36 +91,40 @@ export const createTransferSchema = createDepositSchema.extend({}).check(ctx => 
 export const assets = ["ETH", "DAI"] as const;
 export const createSwapSchema = z
   .object({
-    selected: z.enum(assets),
-    sell: z.object({
-      amount: z.coerce.number<number>({ error: "Please enter a valid amount" }),
+    activeField: z.enum(assets),
+    dai: z.object({
+      amount: z.string({ error: "Please enter a valid amount" }),
       availableBalance: z.number().nonnegative({ message: "Invalid available balance" }),
     }),
 
-    buy: z.object({
-      amount: z.coerce.number<number>({ error: "Please enter a valid amount" }),
+    eth: z.object({
+      amount: z.string({ error: "Please enter a valid amount" }),
       availableBalance: z.number().nonnegative({ message: "Invalid available balance" }),
       // asset: z.string({ error: "This field is required" }),
     }),
   })
   .check(ctx => {
-    if (ctx.value.selected === "DAI") {
-      if (ctx.value.sell.amount > ctx.value.sell.availableBalance) {
+    const ethAmount = Number(ctx.value.eth.amount);
+    const daiAmount = Number(ctx.value.dai.amount);
+    if (ctx.value.activeField === "DAI") {
+      //check for nonzero values
+
+      if (!isNaN(daiAmount) && daiAmount > ctx.value.dai.availableBalance) {
         ctx.issues.push({
           code: "custom",
           message: "Amount exceeds available balance",
-          input: ctx.value.sell.amount,
-          path: ["sell", "amount"],
+          input: ctx.value.dai.amount,
+          path: ["dai", "amount"],
         });
       }
     }
-    if (ctx.value.selected === "ETH") {
-      if (ctx.value.buy.amount > ctx.value.buy.availableBalance) {
+    if (ctx.value.activeField === "ETH") {
+      if (!isNaN(ethAmount) && ethAmount > ctx.value.eth.availableBalance) {
         ctx.issues.push({
           code: "custom",
           message: "Amount exceeds available balance",
-          input: ctx.value.buy.amount,
-          path: ["buy", "amount"],
+          input: ctx.value.eth.amount,
+          path: ["eth", "amount"],
         });
       }
     }

@@ -703,7 +703,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 4,
+      deployedOnBlock: 2,
     },
     Lending: {
       address: "0xb19b36b1456e65e3a6d514d3f715f204bd59f431",
@@ -1213,7 +1213,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 4,
     },
     MovePrice: {
       address: "0x8ce361602b935680e8dec218b820ff5056beb7af",
