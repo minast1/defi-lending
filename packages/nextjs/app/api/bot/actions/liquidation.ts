@@ -61,7 +61,7 @@ export async function liquidate(lending: any, dai: any, dex: any, clients: any[]
       //If none try to create one via swap
       console.log("No eligible liquidators, reverting to swap");
       const swapper = candidates[Math.floor(Math.random() * candidates.length)];
-      console.log({ swapper });
+      //console.log({ swapper });
       if (!swapper) continue;
       const price = (await publicClient.readContract({
         address: dex.address,
@@ -110,7 +110,7 @@ export async function liquidate(lending: any, dai: any, dex: any, clients: any[]
     /** === Execute liquidation === */
     const liquidator = eligible[Math.floor(Math.random() * eligible.length)];
     liquidationInProgress.add(userKey);
-    console.log({ selectedLiquidator: liquidator });
+    //console.log({ selectedLiquidator: liquidator });
     try {
       await liquidator.writeContract({
         address: dai.address,
