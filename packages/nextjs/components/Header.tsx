@@ -65,14 +65,14 @@ export const Header = () => {
   const isLocalNetwork = targetNetwork.id === hardhat.id;
   const [running, setRunning] = useState(false);
 
-  const startSimulator = async (action: string) => {
-    const res = await fetch("/api/bot/", { method: "POST", body: JSON.stringify({ action }) });
+  const startSimulator = async () => {
+    const res = await fetch("/api/bot/start", { method: "POST" });
     const data = await res.json();
     setRunning(data.running);
   };
 
-  const stopSimulator = async (action: string) => {
-    const res = await fetch("/api/bot/", { method: "POST", body: JSON.stringify({ action }) });
+  const stopSimulator = async () => {
+    const res = await fetch("/api/bot/stop", { method: "POST" });
     const data = await res.json();
     setRunning(data.running);
   };
@@ -96,7 +96,7 @@ export const Header = () => {
         <div className="flex items-center gap-3">
           <Button
             className="hover:bg-warning/20 hover:cursor-pointer bg-warning/10 border border-warning/50 text-warning flex items-center text-sm"
-            onClick={running ? () => stopSimulator("stop") : () => startSimulator("start")}
+            onClick={running ? () => stopSimulator() : () => startSimulator()}
           >
             <Bot className="h-5 w-5" />
             {`${running ? "Stop" : "Start"} Market Simulator`}
