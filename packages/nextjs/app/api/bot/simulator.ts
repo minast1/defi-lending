@@ -10,14 +10,14 @@ import { parseEther } from "viem";
 
 const CHANCE_TO_BORROW = 0.3; // 30% chance to borrow
 const CHANCE_TO_ADD_COLLATERAL = 0.2; // 20% chance to add collateral
-export async function runSimulator() {
+export async function runSimulator(signal: AbortSignal) {
   console.log("🤖 Market Simulator Started");
   /** === Trend state (matches Hardhat) === */
   let trend = Math.random() > 0.5 ? 1 : -1;
   let trendDuration = 0;
   let maxTrendDuration = Math.floor(Math.random() * 8) + 7;
 
-  while (true) {
+  while (!signal.aborted) {
     try {
       /** 1️⃣ Update price EVERY tick */
       trendDuration++;
