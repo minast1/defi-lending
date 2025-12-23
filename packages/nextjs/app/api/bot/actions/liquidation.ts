@@ -53,7 +53,6 @@ export async function liquidate(lending: any, dai: any, dex: any, clients: any[]
         };
       }),
     );
-    console.log({ EligibleLiquidator_Balances: balances });
 
     eligible = balances.filter(b => b.hasEnough).map(b => b.wallet);
 
