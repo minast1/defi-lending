@@ -6,11 +6,13 @@ import { SwitchTheme } from "./SwitchTheme";
 //import Link from "next/link";
 import { Button } from "./ui/button";
 import { Bot } from "lucide-react";
+import { parseEther } from "viem";
 //import { usePathname } from "next/navigation";
 import { hardhat } from "viem/chains";
 //import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
+import { useGlobalState } from "~~/services/store/store";
 
 // type HeaderMenuLink = {
 //   label: string;
@@ -64,17 +66,19 @@ export const Header = () => {
   const { targetNetwork } = useTargetNetwork();
   const isLocalNetwork = targetNetwork.id === hardhat.id;
   const [running, setRunning] = useState(false);
-
-  const startSimulator = async () => {
-    const res = await fetch("/api/bot/start", { method: "POST" });
+  const setCurrentBlock = useGlobalState(state => state.setCurrentBlock);
+  const startSimulator = async (action: string) => {
+    const res = await fetch("/api/bot", { method: "POST", body: JSON.stringify({ action }) });
     const data = await res.json();
     setRunning(data.running);
+    setCurrentBlock(parseEther(data.startBlock));
   };
 
-  const stopSimulator = async () => {
-    const res = await fetch("/api/bot/stop", { method: "POST" });
+  const stopSimulator = async (action: string) => {
+    const res = await fetch("/api/bot", { method: "POST", body: JSON.stringify({ action }) });
     const data = await res.json();
     setRunning(data.running);
+    setCurrentBlock(null);
   };
   const burgerMenuRef = useRef<HTMLDetailsElement>(null);
   useOutsideClick(burgerMenuRef, () => {
@@ -96,7 +100,7 @@ export const Header = () => {
         <div className="flex items-center gap-3">
           <Button
             className="hover:bg-warning/20 hover:cursor-pointer bg-warning/10 border border-warning/50 text-warning flex items-center text-sm"
-            onClick={running ? () => stopSimulator() : () => startSimulator()}
+            onClick={running ? () => stopSimulator("stop") : () => startSimulator("start")}
           >
             <Bot className="h-5 w-5" />
             {`${running ? "Stop" : "Start"} Market Simulator`}

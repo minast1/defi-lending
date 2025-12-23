@@ -13,9 +13,8 @@ import { ChainWithAttributes, NETWORKS_EXTRA_DATA } from "~~/utils/scaffold-eth"
 
 type GlobalState = {
   targetNetwork: ChainWithAttributes;
+
   setTargetNetwork: (newTargetNetwork: ChainWithAttributes) => void;
-  currentBlock: bigint | null;
-  setCurrentBlock: (block: bigint | null) => void;
 };
 
 export const useGlobalState = create<GlobalState>(set => ({
@@ -23,7 +22,5 @@ export const useGlobalState = create<GlobalState>(set => ({
     ...scaffoldConfig.targetNetworks[0],
     ...NETWORKS_EXTRA_DATA[scaffoldConfig.targetNetworks[0].id],
   },
-  currentBlock: null,
-  setCurrentBlock: block => set(() => ({ currentBlock: block })),
   setTargetNetwork: (newTargetNetwork: ChainWithAttributes) => set(() => ({ targetNetwork: newTargetNetwork })),
 }));

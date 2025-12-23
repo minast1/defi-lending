@@ -18,20 +18,20 @@ export async function simulateBorrow(client: any, lending: any, user: `0x${strin
     : 30 + Math.random() * 30; // 30–60%
 
   const cappedCollateral = (collateralValue * 70n) / 100n; // 70% max
-  const amount = (cappedCollateral * BigInt(Math.floor(percentage * 10))) / 1000n;
+  const borrowAmount = (cappedCollateral * BigInt(Math.floor(percentage * 10))) / 1000n;
 
-  if (amount <= 0n) return;
+  if (borrowAmount <= 0n) return;
   try {
     await client.writeContract({
       address: lending.address,
       abi: lending.abi,
       functionName: "borrowDai",
-      args: [amount],
+      args: [borrowAmount],
     });
     console.log(
-      `📉 ${user} borrowed ${formatEther(amount)} DAI ` +
+      `📉 ${user} borrowed ${formatEther(borrowAmount)} DAI ` +
         `(${aggressiveBorrower ? "aggressive" : "conservative"}, ` +
-        `${((Number(amount) * 100) / Number(collateralValue)).toFixed(1)}% of collateral)`,
+        `${((Number(borrowAmount) * 100) / Number(collateralValue)).toFixed(1)}% of collateral)`,
     );
   } catch (error) {
     console.error("Borrow failed:", error);
