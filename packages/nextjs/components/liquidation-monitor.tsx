@@ -8,12 +8,10 @@ import { AlertTriangle, Users } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldReadContract, useScaffoldWatchContractEvent } from "~~/hooks/scaffold-eth";
-import { useGlobalState } from "~~/services/store/store";
 
 const LiquidationMonitor = () => {
   const { address: connectedAddress } = useAccount();
   // const [users, setUsers] = useState<string[]>([]);
-  const simulatorStartBlock = useGlobalState(state => state.currentBlock);
 
   const {
     data: events,
@@ -25,7 +23,6 @@ const LiquidationMonitor = () => {
     watch: true,
     blockData: false,
     transactionData: false,
-    fromBlock: simulatorStartBlock ?? undefined,
     receiptData: false,
   });
 
@@ -36,27 +33,16 @@ const LiquidationMonitor = () => {
     eventName: "CollateralAdded",
     onLogs: logs => {
       logs.forEach(log => {
-        // if (simulatorStartBlock !== null && log.blockNumber < simulatorStartBlock) {
-        //   return;
-        // }
         liveLogsRef.current.push(log);
       });
     },
   });
-
-  // /** 3️⃣ Reset live logs when simulator restarts */
-  // useEffect(() => {
-  //   liveLogsRef.current = [];
-  // }, [simulatorStartBlock]);
 
   /** 4️⃣ Derive users */
   const users = useMemo(() => {
     const set = new Set<string>();
 
     events?.forEach(event => {
-      // if (simulatorStartBlock !== null && event.blockNumber < simulatorStartBlock) {
-      //   return;
-      // }
       if (event.args?.user) {
         set.add(event.args.user);
       }

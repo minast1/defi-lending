@@ -134,7 +134,7 @@ export async function liquidate(lending: any, dai: any, dex: any, clients: any[]
           address: lending.address,
           abi: lending.abi,
           functionName: "addCollateral",
-          value: userEth - buffer,
+          value: parseEther("1"), //userEth - buffer,
         });
       }
 

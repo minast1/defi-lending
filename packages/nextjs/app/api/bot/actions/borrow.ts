@@ -1,5 +1,5 @@
 import { publicClient } from "../clients";
-import { formatEther } from "viem";
+import { BaseError, ContractFunctionRevertedError, formatEther } from "viem";
 
 export async function simulateBorrow(client: any, lending: any, user: `0x${string}`) {
   const collateralValue = (await publicClient.readContract({
@@ -14,26 +14,37 @@ export async function simulateBorrow(client: any, lending: any, user: `0x${strin
   //Aggresive vs conservative borrower
   const aggressiveBorrower = Math.random() < 0.3;
   const percentage = aggressiveBorrower
-    ? 60 + Math.random() * 15 // 60–75%
-    : 30 + Math.random() * 30; // 30–60%
+    ? 85 + Math.random() * 14 // 85–99%
+    : 30 + Math.random() * 40; // 30–70%
 
-  const cappedCollateral = (collateralValue * 70n) / 100n; // 70% max
-  const borrowAmount = (cappedCollateral * BigInt(Math.floor(percentage * 10))) / 1000n;
+  //const cappedCollateral = (collateralValue * 70n) / 100n; // 70% max
+  const borrowAmount = (collateralValue * BigInt(Math.floor(percentage * 10))) / 1000n;
 
-  if (borrowAmount <= 0n) return;
-  try {
-    await client.writeContract({
-      address: lending.address,
-      abi: lending.abi,
-      functionName: "borrowDai",
-      args: [borrowAmount],
-    });
-    console.log(
-      `📉 ${user} borrowed ${formatEther(borrowAmount)} DAI ` +
-        `(${aggressiveBorrower ? "aggressive" : "conservative"}, ` +
-        `${((Number(borrowAmount) * 100) / Number(collateralValue)).toFixed(1)}% of collateral)`,
-    );
-  } catch (error) {
-    console.error("Borrow failed:", error);
+  if (borrowAmount > 0n) {
+    try {
+      await client.writeContract({
+        address: lending.address,
+        abi: lending.abi,
+        functionName: "borrowDai",
+        args: [borrowAmount],
+      });
+
+      console.log(
+        `📉 ${user} borrowed ${formatEther(borrowAmount)} DAI ` +
+          `(${aggressiveBorrower ? "aggressive" : "conservative"}, ` +
+          `${((Number(borrowAmount) * 100) / Number(collateralValue)).toFixed(1)}% of collateral)`,
+      );
+    } catch (err) {
+      if (err instanceof BaseError) {
+        const revertError = err.walk(err => err instanceof ContractFunctionRevertedError);
+        if (revertError instanceof ContractFunctionRevertedError) {
+          const errorName = revertError.data?.errorName ?? "";
+          console.log(errorName);
+          // do something with `errorName`
+        }
+      } else {
+        console.log(err);
+      }
+    }
   }
 }

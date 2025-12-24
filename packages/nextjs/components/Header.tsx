@@ -13,6 +13,7 @@ import { hardhat } from "viem/chains";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
 import { useGlobalState } from "~~/services/store/store";
+import { notification } from "~~/utils/scaffold-eth";
 
 // type HeaderMenuLink = {
 //   label: string;
@@ -72,6 +73,10 @@ export const Header = () => {
     const data = await res.json();
     setRunning(data.running);
     setCurrentBlock(parseEther(data.startBlock));
+    notification.success("Market Simulator started", {
+      duration: 6000,
+      icon: "🤖",
+    });
   };
 
   const stopSimulator = async (action: string) => {
@@ -79,6 +84,9 @@ export const Header = () => {
     const data = await res.json();
     setRunning(data.running);
     setCurrentBlock(null);
+    notification.success("Market Simulator stopped", {
+      icon: "🤖",
+    });
   };
   const burgerMenuRef = useRef<HTMLDetailsElement>(null);
   useOutsideClick(burgerMenuRef, () => {
