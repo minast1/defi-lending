@@ -222,6 +222,7 @@ contract LendingTest is Test {
         vm.expectEmit(true, true, true, false);
         emit Liquidated(alice, liquidator, 2500, 1600, price);
         lending.liquidate(alice);
+        assertEq(dai.balanceOf(alice), 0);
         vm.stopPrank();
     }
 

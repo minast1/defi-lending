@@ -25,4 +25,14 @@ contract Dai is ERC20, Ownable {
         _mint(to, amount);
         return true;
     }
+
+    function burn(address account, uint256 amount) external {
+        if (account == address(0)) {
+            revert Dai__InvalidAddress();
+        }
+        if (amount == 0) {
+            revert Dai__InvalidAmount();
+        }
+        _burn(account, amount);
+    }
 }

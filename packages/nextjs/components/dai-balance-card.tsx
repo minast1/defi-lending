@@ -16,6 +16,7 @@ const DaiBalanceCard = () => {
   });
 
   const tokenBalance = `${Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100}`;
+
   return (
     <Card
       className="relative overflow-hidden border-border bg-card hover:border-primary/50 transition-all duration-300 group"

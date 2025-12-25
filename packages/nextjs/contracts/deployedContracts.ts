@@ -83,6 +83,24 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "burn",
+          inputs: [
+            {
+              name: "account",
+              type: "address",
+              internalType: "address",
+            },
+            {
+              name: "amount",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+        {
+          type: "function",
           name: "decimals",
           inputs: [],
           outputs: [

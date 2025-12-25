@@ -224,6 +224,8 @@ contract Lending is Ownable {
         totalSystemCollateral -= totalPayout;
 
         totalSystemBorrowed -= userDebt;
+        //adjust dai.balanceOf(account);to reflect this
+        dai.burn(user, userDebt);
         s_userBorrowed[user] = 0;
 
         //Send ETH to liquidator
