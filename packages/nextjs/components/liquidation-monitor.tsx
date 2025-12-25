@@ -107,15 +107,15 @@ const LiquidationMonitor = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="rounded-lg border border-border overflow-hidden">
+        <div className="relative max-h-[300px] rounded-lg border border-border overflow-y-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10">
               <TableRow className="bg-muted/50">
                 <TableHead>User</TableHead>
                 <TableHead>Collateral</TableHead>
                 <TableHead>Debt</TableHead>
                 <TableHead>Ratio</TableHead>
-                <TableHead className="text-right"></TableHead>
+                <TableHead className="text-left"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

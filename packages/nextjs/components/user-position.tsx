@@ -87,16 +87,16 @@ const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
 
   return (
     <TableRow key={user} className={clsx("hover:bg-muted/30", connectedAddress === user && "bg-muted/30")}>
-      <TableCell className="font-mono text-sm">
+      <TableCell className="font-mono text-sm w-[220px]">
         <Address address={user} disableAddressLink format="short" size="sm" />
       </TableCell>
-      <TableCell className="text-primary font-medium">
+      <TableCell className="text-primary font-medium w-[170px]">
         {Number(formatEther(userCollateral || 0n)).toFixed(2)} ETH
       </TableCell>
       <TableCell className="text-warning font-medium">
         {Number(formatEther(userBorrowed || 0n)).toFixed(2)} Dai
       </TableCell>
-      <TableCell>
+      <TableCell className="w-[170px]">
         <Badge
           className={clsx(
             Number(ratio) < collateralRatio
@@ -111,7 +111,7 @@ const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
           {ratio === "N/A" ? "N/A" : `${ratio}%`}
         </Badge>
       </TableCell>
-      <TableCell className="text-right text-muted-foreground">
+      <TableCell className="text-right text-muted-foreground w-[100px]">
         <Button
           size="sm"
           variant={"outline"}
