@@ -11,7 +11,7 @@ const TVLCard = ({ currentTvl }: { currentTvl: bigint | undefined }) => {
   const [percentChange, setPercentChange] = useState<number>(0);
   const [previousTvl, setPreviousTvl] = useState<number | null>(null);
 
-  const formattedTvl = Number(formatEther(currentTvl || 0n));
+  const formattedTvl = parseFloat(formatEther(currentTvl || 0n));
   // Load previous price from localStorage
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -44,26 +44,6 @@ const TVLCard = ({ currentTvl }: { currentTvl: bigint | undefined }) => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTvl]);
-
-  // useEffect(() => {
-  //   if (tvl === undefined || tvl === null) return;
-
-  //   const prev = JSON.parse(localStorage.getItem("tvl") ?? "{}");
-  //   if (prev !== null) {
-  //     if (tvl > prev) setDirection("up");
-  //     else if (tvl < prev) setDirection("down");
-  //     else setDirection("same");
-
-  //     if (prev > 0) {
-  //       const change = ((Number(tvl) - Number(prev)) / Number(prev)) * 100;
-  //       setPercentChange(change);
-  //     } else {
-  //       setPercentChange(0);
-  //     }
-  //   }
-
-  //   localStorage.setItem("tvl", tvl.toString());
-  // }, [tvl]);
 
   return (
     <Card

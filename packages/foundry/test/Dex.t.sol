@@ -46,5 +46,6 @@ contract DexTest is Test {
         assertEq(dex.totalLiquidity(), 1000 ether);
         assertEq(dai.balanceOf(address(dex)), 1000000);
         assertGt(dex.currentPrice(), 0);
+        uint256 price = 50 ether;
     }
 }

@@ -48,6 +48,7 @@ contract LendingTest is Test {
         dai = new Dai();
         dex = new DEX(address(dai));
         lending = new Lending(address(dex), address(dai));
+
         oracle = new MovePrice(address(dex), address(dai));
         flashLoanLiquidator = new FlashLoanLiquidator(
             address(lending),
@@ -60,11 +61,12 @@ contract LendingTest is Test {
         dai.mintTo(address(lending), 1000000);
         dai.mintTo(address(oracle), 10000000000000000000000 ether);
         dai.mintTo(address(flashLoanLiquidator), 1000000000 ether);
-
+        dai.mintTo(liquidator, 850);
         dai.approve(address(dex), type(uint256).max);
 
-        dex.innit{value: 1000 ether}(1000000);
+        dex.innit{value: 1 ether}(2000);
         vm.deal(alice, 10 ether);
+        vm.deal(liquidator, 10 ether);
         vm.deal(address(oracle), 1000 ether);
     }
 
@@ -291,5 +293,29 @@ contract LendingTest is Test {
 
         // Liquidator should end with 0 dai (no leftovers)
         assertEq(dai.balanceOf(address(liquidator)), 0);
+    }
+
+    function test_Liquidation() public {
+        vm.startPrank(alice);
+        lending.addCollateral{value: 1 ether}();
+
+        lending.borrowDai(833);
+
+        vm.stopPrank();
+
+        //Simulate Price drop
+        ///drop the price of corn such that the user can be liquidated
+        oracle.movePrice(2000);
+        console.log("New Price from DEX", dex.currentPrice());
+
+        vm.startPrank(liquidator);
+        dai.approve(address(lending), 833);
+
+        uint256 liquidatorEthBefore = liquidator.balance;
+        lending.liquidate(alice);
+        assertEq(lending.s_userBorrowed(alice), 0);
+        assertTrue(liquidator.balance > liquidatorEthBefore);
+
+        vm.stopPrank();
     }
 }

@@ -50,10 +50,9 @@ contract DeployYourContract is ScaffoldETHDeploy {
         // Approve DEX to pull deployer's CORN
         dai.approve(address(dex), type(uint256).max);
 
-        if (block.chainid == 31337) {
-            // Initialize DEX with full liquidity
-            dex.innit{value: 1 ether}(2000 ether);
-        }
+        // Initialize DEX with full liquidity
+        dex.innit{value: 1 ether}(2000 ether);
+
         //new YourContract(deployer);
     }
 }

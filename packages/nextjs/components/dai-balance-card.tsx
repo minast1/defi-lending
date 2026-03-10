@@ -11,7 +11,7 @@ const DaiBalanceCard = () => {
 
   const { data: daiBalance, isLoading } = useScaffoldReadContract({
     contractName: "Dai",
-    functionName: "balanceOf",
+    functionName: "balanceOf", ///should display the s_userBorrowed
     args: [address],
   });
 

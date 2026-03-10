@@ -27,6 +27,7 @@ interface IFlashLoanRecipient {
 contract Lending is Ownable {
     uint256 private constant COLLATERAL_RATIO = 120; // 120% collateralization required
     uint256 private constant LIQUIDATOR_REWARD = 10; // 10% reward for liquidators
+    uint256 private constant PRECISION = 1e18;
 
     Dai private dai;
     DEX private dex;
@@ -35,7 +36,7 @@ contract Lending is Ownable {
     mapping(address => uint256) public s_userBorrowed; // User's borrowed dai balance
 
     //System totals for TVL
-    uint256 public totalSystemCollateral; //ETH (wei)
+    uint256 public totalSystemCollateral;
     uint256 public totalSystemBorrowed; ///Dai units
 
     event CollateralAdded(
@@ -74,7 +75,7 @@ contract Lending is Ownable {
     /**
      * @notice Allows users to add ETH as collateral to their account
      */
-    function addCollateral() public payable {
+    function addCollateral() external payable {
         if (msg.value == 0) revert Lending__InvalidAmount();
 
         s_userCollateral[msg.sender] += msg.value;
@@ -86,11 +87,13 @@ contract Lending is Ownable {
      * @notice Allows users to withdraw collateral as long as it doesn't make them liquidatable
      * @param amount The amount of collateral to withdraw
      */
-    function withdrawCollateral(uint256 amount) public {
-        if (amount == 0 || amount > s_userCollateral[msg.sender])
+    function withdrawCollateral(uint256 amount) external {
+        uint256 userCollateral = s_userCollateral[msg.sender];
+
+        if (amount == 0 || amount > userCollateral)
             revert Lending__InvalidAmount();
 
-        s_userCollateral[msg.sender] -= amount;
+        s_userCollateral[msg.sender] = userCollateral - amount;
         totalSystemCollateral -= amount;
 
         if (s_userBorrowed[msg.sender] > 0) {
@@ -111,7 +114,7 @@ contract Lending is Ownable {
     ) public view returns (uint256) {
         uint256 collateral = s_userCollateral[user];
         uint256 price = dex.currentPrice();
-        return (collateral * price) / 1e18; //Returns collateral value in DAI
+        return (collateral * price) / PRECISION; //Returns collateral value in DAI
     }
 
     /**
@@ -135,8 +138,7 @@ contract Lending is Ownable {
      * @return bool True if the position is liquidatable, false otherwise
      */
     function isLiquidatable(address user) public view returns (bool) {
-        uint256 positionRatio = _calculatePositionRatio(user);
-        return positionRatio < COLLATERAL_RATIO * 1e16; // ---> 1.2e18
+        return getHealthFactor(user) < 1e18;
     }
 
     /**
@@ -192,49 +194,46 @@ contract Lending is Ownable {
      * @dev The caller must have enough dai to pay back user's debt
      * @dev The caller must have approved this contract to transfer the debt
      */
-    function liquidate(address user) public {
+    function liquidate(address user) external {
         if (!isLiquidatable(user)) revert Lending__NotLiquidatable();
 
         uint256 userDebt = s_userBorrowed[user];
-        if (userDebt == 0) revert Lending__NotLiquidatable();
+        uint256 userCollateral = s_userCollateral[user];
+        uint256 price = dex.currentPrice(); ///Amount of Dai per 1 ETH
 
+        if (userDebt == 0) revert Lending__NotLiquidatable();
         if (dai.balanceOf(msg.sender) < userDebt)
             revert Lending__InsufficientLiquidatorDai();
 
-        uint256 collateralValue = calculateCollateralValue(user);
-        uint256 userCollateral = s_userCollateral[user];
+        //Calculate how much ETH is needed to cover the debt
+        // Formula: (debt * 1e18) / price
+        uint256 ethValueOfDebt = (userDebt * PRECISION) / price;
+        //Add 10% reward for liquidators
+        uint256 totalToSeize = (ethValueOfDebt * (100 + LIQUIDATOR_REWARD)) /
+            100;
+        if (totalToSeize > userCollateral) {
+            totalToSeize = userCollateral;
+        }
+
+        s_userCollateral[user] -= totalToSeize;
+        s_userBorrowed[user] = 0;
+        totalSystemCollateral -= totalToSeize;
+        totalSystemBorrowed -= userDebt;
 
         ///Pull dai from liquidator
-        bool sent = dai.transferFrom(msg.sender, address(this), userDebt);
-        if (!sent) revert Lending__TransferFailed();
+        if (!dai.transferFrom(msg.sender, address(this), userDebt))
+            revert Lending__TransferFailed();
 
-        //Compute proportional ETH that corresponds to the paid debt
-        uint256 collateralPurchased = (userDebt * userCollateral) /
-            collateralValue;
-        //10% reward for liquidators
-        uint256 reward = (collateralPurchased * LIQUIDATOR_REWARD) / 100;
-        uint256 totalPayout = collateralPurchased + reward;
-
-        //Dont exceed total collateral
-        totalPayout = totalPayout > userCollateral
-            ? userCollateral
-            : totalPayout;
-
-        s_userCollateral[user] -= totalPayout;
-        totalSystemCollateral -= totalPayout;
-
-        totalSystemBorrowed -= userDebt;
         //adjust dai.balanceOf(account);to reflect this
         dai.burn(user, userDebt);
-        s_userBorrowed[user] = 0;
 
         //Send ETH to liquidator
-        (bool success, ) = payable(msg.sender).call{value: totalPayout}("");
+        (bool success, ) = payable(msg.sender).call{value: totalToSeize}("");
         if (!success) revert Lending__TransferFailed();
         emit Liquidated(
             user,
             msg.sender,
-            totalPayout,
+            totalToSeize,
             userDebt,
             dex.currentPrice()
         );
@@ -259,14 +258,21 @@ contract Lending is Ownable {
         //Get the loan back - Should revert if it doesn't have enough
         dai.transferFrom(address(_recipient), address(this), _amount);
     }
+    /**
+     * @notice Returns a normalized Safety Score.
+     * 1e18 (1.0) is the "Cliff". Above is safe, below is liquidatable.
+     * Max Borrow  =    collateral Value / 1.2
+     */
+    function getHealthFactor(address user) public view returns (uint256) {
+        uint256 debt = s_userBorrowed[user];
+        if (debt == 0) return type(uint256).max;
 
-    /* ========== TVL getters ========== */
-    // Total Value Locked expressed in DAI (DAI units, not scaled): collateral (ETH->DAI) + DAI balance held by lending contract
-    function getTVLInDAI() public view returns (uint256) {
-        uint256 price = dex.currentPrice(); // DAI per ETH (token units)
-        uint256 collateralValueDAI = (totalSystemCollateral * price) / 1e18;
-        uint256 daiInContract = dai.balanceOf(address(this));
-        return collateralValueDAI + daiInContract;
+        uint256 collateralValueInDai = calculateCollateralValue(user);
+        // Formula: (Collateral * 1e18) / (Debt * 1.2)
+        // We multiply by 100 to offset the COLLATERAL_RATIO (120)
+        return
+            (collateralValueInDai * 100 * PRECISION) /
+            (debt * COLLATERAL_RATIO);
     }
 
     // TVL expressed in ETH (wei): total collateral + value of DAI held converted to ETH
@@ -274,7 +280,7 @@ contract Lending is Ownable {
         uint256 price = dex.currentPrice(); // DAI per ETH
         uint256 daiInContract = dai.balanceOf(address(this));
         // convert dai -> ETH: (dai * 1e18) / price
-        uint256 daiInEth = (daiInContract * 1e18) / price;
+        uint256 daiInEth = (daiInContract * PRECISION) / price;
         return totalSystemCollateral + daiInEth;
     }
 
