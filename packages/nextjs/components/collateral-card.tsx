@@ -52,7 +52,7 @@ const CollateralCard = () => {
             </div>
           </div>
         ) : (
-          <p className="text-2xl font-bold text-foreground">{`${formattedCollateralValue.toFixed(4)} ETH`}</p>
+          <p className="text-2xl font-bold text-foreground">{`${formattedCollateralValue.toFixed(2)} ETH`}</p>
         )}
       </CardContent>
     </Card>

@@ -19,7 +19,7 @@ const EthUsDToggle = ({ ethValue, className = "" }: TProps) => {
   const { price: nativeCurrencyPrice, isLoading, isError } = useFetchNativeCurrencyPrice();
   const toggle = () => setShowUsd(s => !s);
 
-  if (isLoading || !ethValue || nativeCurrencyPrice === 0) {
+  if (isLoading || nativeCurrencyPrice === 0) {
     return (
       <div className="animate-pulse flex space-x-4">
         <div className="rounded-md bg-slate-300 h-6 w-6"></div>
@@ -38,7 +38,7 @@ const EthUsDToggle = ({ ethValue, className = "" }: TProps) => {
     );
   }
 
-  const formattedEThValue = ethValue ? Number(formatEther(ethValue)) : 0;
+  const formattedEThValue = ethValue ? parseFloat(formatEther(ethValue)) : 0;
 
   return (
     <Tooltip>
@@ -58,7 +58,7 @@ const EthUsDToggle = ({ ethValue, className = "" }: TProps) => {
               </>
             ) : (
               <>
-                <span>{formattedEThValue.toFixed(4)}</span>
+                <span>{formattedEThValue.toFixed(2)}</span>
                 <span className="text-[0.8em] font-bold ml-1">{targetNetwork.nativeCurrency.symbol}</span>
               </>
             )}

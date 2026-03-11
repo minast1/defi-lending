@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Dai: {
-      address: "0x700b6a60ce7eaaea56f065753d8dcb9653dbad35",
+      address: "0xd49880bddfac4fd20d3b6bee01c71231c0c63789",
       abi: [
         {
           type: "constructor",
@@ -450,10 +450,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 1,
+      deployedOnBlock: 25,
     },
     DEX: {
-      address: "0xa15bb66138824a1c7167f5e85b957d04dd34e468",
+      address: "0x45b0bbaceedcfbae96aec2d2ffef70777b0b3ae3",
       abi: [
         {
           type: "constructor",
@@ -721,10 +721,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 27,
     },
     Lending: {
-      address: "0xb19b36b1456e65e3a6d514d3f715f204bd59f431",
+      address: "0x8f3024d12c3d702930f2ff98aa8e2261f0be490a",
       abi: [
         {
           type: "constructor",
@@ -806,8 +806,14 @@ const deployedContracts = {
         },
         {
           type: "function",
-          name: "getTVLInDAI",
-          inputs: [],
+          name: "getHealthFactor",
+          inputs: [
+            {
+              name: "user",
+              type: "address",
+              internalType: "address",
+            },
+          ],
           outputs: [
             {
               name: "",
@@ -1231,10 +1237,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 26,
     },
     MovePrice: {
-      address: "0x8ce361602b935680e8dec218b820ff5056beb7af",
+      address: "0x67f65b834aaac92c15c2eba9ff7e81f2d33a1cfd",
       abi: [
         {
           type: "constructor",
@@ -1275,10 +1281,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 2,
+      deployedOnBlock: 27,
     },
     FlashLoanLiquidator: {
-      address: "0xe1aa25618fa0c7a1cfdab5d6b456af611873b629",
+      address: "0xa7b987f505366630109de019862c183e690a040b",
       abi: [
         {
           type: "constructor",
@@ -1336,7 +1342,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 3,
+      deployedOnBlock: 28,
     },
   },
 } as const;

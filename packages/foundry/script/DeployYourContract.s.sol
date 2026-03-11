@@ -36,22 +36,25 @@ contract DeployYourContract is ScaffoldETHDeploy {
         MovePrice i_movePrice = new MovePrice(address(dex), address(dai));
 
         new FlashLoanLiquidator(address(i_lending), address(dex), address(dai));
+        // Mint some tokens to MovePrice
+        dai.mintTo(address(i_movePrice), 10_000_000_000_000);
+
+        // Mint tokens for Lending contract buffer
+        dai.mintTo(address(i_lending), 1000000);
 
         // if (block.chainid == 31337) {
         // Give deployer enough CORN for DEX bootstrap
-        dai.mintTo(address(deployer), 10_000_000 ether);
-
-        // Mint some tokens to MovePrice
-        dai.mintTo(address(i_movePrice), 10_000_000_000_000 ether);
-
-        // Mint tokens for Lending contract buffer
-        dai.mintTo(address(i_lending), 1000000 ether);
+        if (block.chainid == 31337) {
+            dai.mintTo(0x4d8341e8F2408227AD2FB34d370759dD5a09De2E, 3000);
+        } else {
+            dai.mintTo(0x7874665BF5Da57D222de629d4C6ba9ae619076F0, 3000);
+        }
 
         // Approve DEX to pull deployer's CORN
-        dai.approve(address(dex), type(uint256).max);
+        //  dai.approve(address(dex), type(uint256).max);
 
         // Initialize DEX with full liquidity
-        dex.innit{value: 1 ether}(2000 ether);
+        // dex.innit{value: 1 ether}(2000);
 
         //new YourContract(deployer);
     }

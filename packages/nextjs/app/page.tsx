@@ -18,7 +18,7 @@ import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 const Home: NextPage = () => {
   const { data: tvl } = useScaffoldReadContract({
     contractName: "Lending",
-    functionName: "getTVLInETH",
+    functionName: "getTotalSystemCollateral",
   });
 
   return (

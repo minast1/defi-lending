@@ -76,7 +76,7 @@ const RepayTab = () => {
 
   const handleBorrow = async (data: CreateRepaySchema) => {
     // If wallet supports batching – use EIP-5792
-
+    if (!basicLendingContract || !daiContract || !address) return;
     if (supportsAtomicActions) {
       console.log("Batch Tx Initiated ....");
       executeBatch({
@@ -104,7 +104,7 @@ const RepayTab = () => {
       try {
         await writeDaiContract({
           functionName: "approve",
-          args: [basicLendingContract?.address, parseEther(data.availableBalance.toString())],
+          args: [basicLendingContract.address, BigInt(data.availableBalance)],
         });
         await writeLendingContract({
           functionName: "repayDai",

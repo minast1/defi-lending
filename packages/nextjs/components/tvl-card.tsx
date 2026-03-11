@@ -1,49 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import EthUsDToggle from "./eth-usd-toggle";
 import { Card, CardContent } from "./ui/card";
 import { TrendingDown, TrendingUp } from "lucide-react";
-import { formatEther } from "viem";
+import useTvlChange from "~~/hooks/use-tvlchange";
 
 const TVLCard = ({ currentTvl }: { currentTvl: bigint | undefined }) => {
-  const STORAGE_KEY = `tvl-history`;
-
-  const [direction, setDirection] = useState<"up" | "down" | "same">("same");
-  const [percentChange, setPercentChange] = useState<number>(0);
-  const [previousTvl, setPreviousTvl] = useState<number | null>(null);
-
-  const formattedTvl = parseFloat(formatEther(currentTvl || 0n));
-  // Load previous price from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      setPreviousTvl(Number(saved));
-    } else {
-      //First time save
-      localStorage.setItem(STORAGE_KEY, formattedTvl.toString());
-
-      setPreviousTvl(formattedTvl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  // When current price updates, store it and compute % change
-  useEffect(() => {
-    if (previousTvl === null) return;
-    if (formattedTvl === previousTvl) return;
-
-    // Update only when changed
-    const pct = ((formattedTvl - previousTvl) / previousTvl) * 100;
-
-    setPercentChange(pct);
-    if (pct == 0) setDirection("same");
-    else if (pct > 0) setDirection("up");
-    else if (pct < 0) setDirection("down");
-    else setDirection("same");
-
-    localStorage.setItem(STORAGE_KEY, formattedTvl.toString());
-    setPreviousTvl(() => formattedTvl);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTvl]);
+  const { percentChange, direction } = useTvlChange(currentTvl);
 
   return (
     <Card

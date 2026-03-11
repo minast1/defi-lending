@@ -59,9 +59,9 @@ contract LendingTest is Test {
         //MINTS && APPROVALS
         dai.mintTo(address(this), 1000000);
         dai.mintTo(address(lending), 1000000);
-        dai.mintTo(address(oracle), 10000000000000000000000 ether);
-        dai.mintTo(address(flashLoanLiquidator), 1000000000 ether);
-        dai.mintTo(liquidator, 850);
+        dai.mintTo(address(oracle), 10000000000000000000000);
+        dai.mintTo(address(flashLoanLiquidator), 1000000000);
+
         dai.approve(address(dex), type(uint256).max);
 
         dex.innit{value: 1 ether}(2000);
@@ -208,21 +208,20 @@ contract LendingTest is Test {
 
     function test_ItShouldEmitAppropriateEventsOnLiquidation() public {
         vm.startPrank(alice);
-        lending.addCollateral{value: 2 ether}();
+        lending.addCollateral{value: 1 ether}();
         uint256 price = dex.currentPrice();
-        lending.borrowDai(1600);
+        lending.borrowDai(833);
         vm.stopPrank();
 
-        vm.prank(address(oracle)); ///drop the price of corn such that the user can be liquidated
-        oracle.movePrice(150 ether);
+        oracle.movePrice(2000);
 
         // vm.prank(address(dex));
-        dai.mintTo(liquidator, 3000);
+        dai.mintTo(liquidator, 2000);
 
         vm.startPrank(liquidator);
-        dai.approve(address(lending), 3000);
+        dai.approve(address(lending), 2000);
         vm.expectEmit(true, true, true, false);
-        emit Liquidated(alice, liquidator, 2500, 1600, price);
+        emit Liquidated(alice, liquidator, 2500, 2000, price);
         lending.liquidate(alice);
         assertEq(dai.balanceOf(alice), 0);
         vm.stopPrank();
@@ -247,17 +246,17 @@ contract LendingTest is Test {
 
     function test_flashLoanLiquidation() public {
         vm.startPrank(alice);
-        lending.addCollateral{value: 5 ether}();
+        lending.addCollateral{value: 1 ether}();
         uint256 price = dex.currentPrice();
-        lending.borrowDai(1600);
+        lending.borrowDai(833);
         vm.stopPrank();
         console.log("Price from DEX", price);
         console.log(
             "Collateral Value (CORN)",
             lending.calculateCollateralValue(alice)
         );
-        vm.prank(address(oracle)); ///drop the price of corn such that the user can be liquidated
-        oracle.movePrice(650 ether);
+
+        oracle.movePrice(2000);
 
         console.log("New Price from DEX", price);
         console.log(
@@ -266,21 +265,22 @@ contract LendingTest is Test {
         );
         //vm.deal(address(flashLoanLiquidator), 1 ether);
         uint256 initialLendingBalance = dai.balanceOf(address(lending));
+
         uint256 initialLiquidatorBalance = liquidator.balance;
         uint256 initialCollateralBalance = lending.s_userCollateral(alice);
+        vm.stopPrank();
+
         vm.startPrank(liquidator);
-        lending.flashLoan(
-            IFlashLoanRecipient(flashLoanLiquidator),
-            1600,
-            alice
-        );
+        lending.flashLoan(IFlashLoanRecipient(flashLoanLiquidator), 833, alice);
         vm.stopPrank();
 
         //Lending must have its dai returned
         uint256 finalLendingBalance = dai.balanceOf(address(lending));
-        assertEq(finalLendingBalance, initialLendingBalance + 1600);
+
+        assertEq(finalLendingBalance, initialLendingBalance + 833);
         //Liquidator must have its dai returned
         uint256 finalLiquidatorBalance = liquidator.balance;
+
         assertEq(lending.s_userBorrowed(alice), 0, "Debt Cleared");
         assertLt(
             lending.s_userCollateral(alice),
@@ -296,6 +296,7 @@ contract LendingTest is Test {
     }
 
     function test_Liquidation() public {
+        dai.mintTo(liquidator, 850);
         vm.startPrank(alice);
         lending.addCollateral{value: 1 ether}();
 
