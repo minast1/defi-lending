@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import RatioChange from "../healthfactor-change";
+import HealthFactorChange from "../healthfactor-change";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
@@ -7,8 +7,8 @@ import { Spinner } from "../ui/spinner";
 import { TabsContent } from "../ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { encodeFunctionData, formatEther, parseEther } from "viem";
-import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { encodeFunctionData } from "viem";
+import { useAccount } from "wagmi";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useBatchTx } from "~~/hooks/use-batchTx";
 import { useGetWalletCapabilities } from "~~/hooks/use-getwallet-capabilities";
@@ -18,6 +18,7 @@ const RepayTab = () => {
   const { address } = useAccount();
   const { executeBatch } = useBatchTx();
   const { supportsAtomicActions } = useGetWalletCapabilities();
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const { data: ethPrice } = useScaffoldReadContract({
     contractName: "DEX",
@@ -26,6 +27,10 @@ const RepayTab = () => {
 
   const form = useForm<CreateRepaySchema>({
     resolver: zodResolver(createRepaySchema),
+    defaultValues: {
+      availableBalance: 0,
+      amount: 0,
+    },
   });
 
   const { data: basicLendingContract } = useDeployedContractInfo({
@@ -37,8 +42,8 @@ const RepayTab = () => {
   });
 
   const { data: daiBalance } = useScaffoldReadContract({
-    contractName: "Dai",
-    functionName: "balanceOf",
+    contractName: "Lending",
+    functionName: "getUserBorrowed",
     args: [address],
   });
 
@@ -46,37 +51,20 @@ const RepayTab = () => {
     contractName: "Dai",
   });
 
-  const {
-    writeContractAsync: writeLendingContract,
-    isPending,
-    data: lendingMutationHash,
-  } = useScaffoldWriteContract({
+  const { writeContractAsync: writeLendingContract, isMining } = useScaffoldWriteContract({
     contractName: "Lending",
   });
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash: lendingMutationHash,
-  });
-
   useEffect(() => {
-    if (isConfirmed) {
-      form.reset({
-        availableBalance: Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100,
-      });
+    if (daiBalance !== undefined) {
+      form.setValue("availableBalance", Number(daiBalance || 0n));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmed, form]);
-
-  //Reset form Default values when they are ready
-  useEffect(() => {
-    form.reset({
-      availableBalance: Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100,
-    });
   }, [daiBalance, form]);
 
   const handleBorrow = async (data: CreateRepaySchema) => {
     // If wallet supports batching – use EIP-5792
     if (!basicLendingContract || !daiContract || !address) return;
+
     if (supportsAtomicActions) {
       console.log("Batch Tx Initiated ....");
       executeBatch({
@@ -86,7 +74,7 @@ const RepayTab = () => {
             data: encodeFunctionData({
               abi: daiContract?.abi as any,
               functionName: "approve",
-              args: [basicLendingContract?.address, parseEther(data.availableBalance.toString())],
+              args: [basicLendingContract?.address, BigInt(data.availableBalance)],
             }),
           },
           {
@@ -94,7 +82,7 @@ const RepayTab = () => {
             data: encodeFunctionData({
               abi: basicLendingContract?.abi as any,
               functionName: "repayDai",
-              args: [parseEther(data.amount.toString())],
+              args: [BigInt(data.amount)],
             }),
           },
         ],
@@ -102,14 +90,26 @@ const RepayTab = () => {
     } else {
       //Not Supported
       try {
+        setIsLoading(true);
         await writeDaiContract({
           functionName: "approve",
           args: [basicLendingContract.address, BigInt(data.availableBalance)],
         });
-        await writeLendingContract({
-          functionName: "repayDai",
-          args: [parseEther(data.amount.toString())],
-        });
+        await writeLendingContract(
+          {
+            functionName: "repayDai",
+            args: [BigInt(data.amount)],
+          },
+          {
+            onBlockConfirmation: () => {
+              setIsLoading(false);
+              form.reset({
+                availableBalance: 0,
+                amount: 0,
+              });
+            },
+          },
+        );
       } catch (error) {
         console.error("Error repaying dai:", error);
       }
@@ -128,10 +128,11 @@ const RepayTab = () => {
                 <FieldLabel className="text-sm text-inherit flex justify-between">
                   Amount
                   {address && (
-                    <RatioChange
+                    <HealthFactorChange
                       user={address}
-                      ethPrice={Number(formatEther(ethPrice || 0n))}
-                      inputAmount={-Number(field.value || 0)}
+                      ethPrice={Number(ethPrice || 0n)}
+                      inputAmount={Number(field.value || 0)}
+                      isBorrow={false}
                     />
                   )}
                 </FieldLabel>
@@ -151,7 +152,7 @@ const RepayTab = () => {
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground hover:cursor-pointer"
             //disabled={!amount}
           >
-            {isPending || isConfirming ? (
+            {isLoading || isMining ? (
               <>
                 <Spinner className="mr-2" />
                 Please Wait...

@@ -29,7 +29,7 @@ const DepositWithdraw = () => {
   // const tokenBalance = `${Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100}`;
   const [activeTab, setActiveTab] = useState("deposit");
   const formattedEThValue = balance ? Number(balance.formatted) : 0;
-  const formattedCollateralValue = collateral ? Number(formatEther(collateral || 0n)) : 0;
+  const formattedCollateralValue = collateral ? Number(formatEther(collateral)) : 0;
 
   const asset = {
     symbol: "ETH",

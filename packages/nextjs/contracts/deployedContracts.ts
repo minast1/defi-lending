@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     Dai: {
-      address: "0xe8f76a822b57b973c7a89006092364fff8f69040",
+      address: "0xf7cd8fa9b94db2aa972023b379c7f72c65e4de9d",
       abi: [
         {
           type: "constructor",
@@ -450,10 +450,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 38,
+      deployedOnBlock: 31,
     },
     DEX: {
-      address: "0x4e85dc48a70da1298489d5b6fc2492767d98f384",
+      address: "0x12975173b87f7595ee45dffb2ab812ece596bf84",
       abi: [
         {
           type: "constructor",
@@ -721,10 +721,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 39,
+      deployedOnBlock: 31,
     },
     Lending: {
-      address: "0x4d8e02bbfcf205828a8352af4376b165e123d7b0",
+      address: "0x82dc47734901ee7d4f4232f398752cb9dd5daccc",
       abi: [
         {
           type: "constructor",
@@ -1275,10 +1275,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 40,
+      deployedOnBlock: 31,
     },
     MovePrice: {
-      address: "0xeab25969e5285df34a3b245324d0b2b91e31cad4",
+      address: "0x196dbcbb54b8ec4958c959d8949ebfe87ac2aaaf",
       abi: [
         {
           type: "constructor",
@@ -1319,10 +1319,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 41,
+      deployedOnBlock: 31,
     },
     FlashLoanLiquidator: {
-      address: "0x150890d6984e98f408162ee65684779804bff858",
+      address: "0x82c6d3ed4cd33d8ec1e51d0b5cc1d822eaa0c3dc",
       abi: [
         {
           type: "constructor",
@@ -1380,7 +1380,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 41,
+      deployedOnBlock: 31,
     },
   },
 } as const;

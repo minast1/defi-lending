@@ -7,9 +7,10 @@ type UserPositionProps = {
   user: string;
   ethPrice: number;
   inputAmount: number;
+  isBorrow: boolean;
 };
 
-const HealthFactorChange = ({ user, ethPrice, inputAmount }: UserPositionProps) => {
+const HealthFactorChange = ({ user, ethPrice, inputAmount, isBorrow }: UserPositionProps) => {
   const { data: userCollateral } = useScaffoldReadContract({
     contractName: "Lending",
     functionName: "getUserCollateral",
@@ -33,7 +34,7 @@ const HealthFactorChange = ({ user, ethPrice, inputAmount }: UserPositionProps) 
 
   const currentHF = calculateHF(borrowedAmount);
 
-  const nextHF = calculateHF(borrowedAmount + inputAmount);
+  const nextHF = calculateHF(isBorrow ? borrowedAmount + inputAmount : borrowedAmount - inputAmount);
   const formatHF = (val: number) => (val === Infinity ? "∞" : Math.floor(val * 100) / 100);
   if (inputAmount === 0 || isNaN(inputAmount)) return null;
 

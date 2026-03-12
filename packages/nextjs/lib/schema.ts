@@ -28,7 +28,7 @@ export const createWithdrawSchema = createDepositSchema
     if (ctx.value.amount > ctx.value.availableBalance) {
       ctx.issues.push({
         code: "custom",
-        message: "Insufficient Collateral Balance",
+        message: "Amount Exceedes Collateral Balance",
         input: ctx.value.amount,
         path: ["amount"],
       });
@@ -68,7 +68,7 @@ export const createRepaySchema = createDepositSchema
     if (ctx.value.amount > ctx.value.availableBalance) {
       ctx.issues.push({
         code: "custom",
-        message: "Amount exceeds available balance",
+        message: "Amount exceeds your available Dai balance",
         input: ctx.value.amount,
         path: ["amount"],
       });

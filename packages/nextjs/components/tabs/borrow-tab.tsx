@@ -102,6 +102,7 @@ const BorrowTab = () => {
                       user={address}
                       ethPrice={Number(ethPrice || 0n)}
                       inputAmount={Number(field.value || 0)}
+                      isBorrow={true}
                     />
                   )}
                 </FieldLabel>

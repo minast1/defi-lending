@@ -2,15 +2,15 @@
 
 import React, { useEffect } from "react";
 import { TAsset } from "../deposit-and-withdraw";
-import { EtherInput } from "../ether-input";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
+import { Input } from "../ui/input";
 import { Spinner } from "../ui/spinner";
 import { TabsContent } from "../ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { parseEther } from "viem";
-import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { CreateWithdrawalSchema, createWithdrawSchema } from "~~/lib/schema";
 
@@ -20,44 +20,48 @@ type TProps = {
 };
 const WithdrawTab = ({ asset, balance }: TProps) => {
   const { address } = useAccount();
+  const [isLoading, setIsLoading] = React.useState(false);
   const form = useForm<CreateWithdrawalSchema>({
     resolver: zodResolver(createWithdrawSchema),
+    defaultValues: {
+      availableBalance: balance,
+      amount: 0,
+      address,
+    },
   });
 
-  const {
-    writeContractAsync: writeLendingContract,
-    data: hash,
-    isPending,
-  } = useScaffoldWriteContract({
+  const { writeContractAsync: writeLendingContract, isMining } = useScaffoldWriteContract({
     contractName: "Lending",
   });
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash,
-  });
-  //Reset form Default values when they are ready
+  // //Reset form Default values when they are ready
   useEffect(() => {
-    form.reset({
-      availableBalance: balance,
-      address,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address, balance]);
-
-  useEffect(() => {
-    if (isConfirmed) {
-      form.reset({
-        availableBalance: balance,
-      });
+    if (address !== undefined) {
+      form.setValue("address", address);
+      form.setValue("availableBalance", balance);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmed]);
+  }, [address, balance, form]);
+
   const handleWithdraw = async (data: CreateWithdrawalSchema) => {
+    setIsLoading(true);
     try {
-      await writeLendingContract({
-        functionName: "withdrawCollateral",
-        args: [parseEther(data.amount.toString())],
-      });
+      console.log(data.amount);
+      await writeLendingContract(
+        {
+          functionName: "withdrawCollateral",
+          args: [parseEther(data.amount.toString())],
+        },
+        {
+          onBlockConfirmation: () => {
+            setIsLoading(false);
+            form.reset({
+              availableBalance: balance,
+              amount: 0,
+              address,
+            });
+          },
+        },
+      );
     } catch (error) {
       console.error("Error adding collateral:", error);
     }
@@ -73,13 +77,12 @@ const WithdrawTab = ({ asset, balance }: TProps) => {
             render={({ field, fieldState }) => (
               <Field className="space-y-0" data-invalid={fieldState.invalid}>
                 <FieldLabel className="text-sm text-inherit">Amount</FieldLabel>
-                <EtherInput
+                <Input
                   placeholder="0.00"
                   value={field.value?.toString() ?? ""}
                   onChange={field.onChange}
                   className="text-lg"
-                  ariaInvalid={fieldState.invalid}
-                  defaultUsdMode={false}
+                  aria-invalid={fieldState.invalid}
                 />
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
@@ -90,10 +93,10 @@ const WithdrawTab = ({ asset, balance }: TProps) => {
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground hover:cursor-pointer"
             //disabled={!amount}
           >
-            {isPending || isConfirming ? (
+            {isMining || isLoading ? (
               <>
                 <Spinner className="mr-2" />
-                Depositing...
+                Withdrawing...
               </>
             ) : (
               `Withdraw ${asset.symbol}`
