@@ -291,4 +291,12 @@ contract Lending is Ownable {
     function getTotalSystemBorrowed() external view returns (uint256) {
         return totalSystemBorrowed;
     }
+
+    function getUserCollateral(address user) external view returns (uint256) {
+        return s_userCollateral[user];
+    }
+
+    function getUserBorrowed(address user) external view returns (uint256) {
+        return s_userBorrowed[user];
+    }
 }

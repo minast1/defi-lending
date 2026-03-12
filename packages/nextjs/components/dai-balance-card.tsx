@@ -1,7 +1,6 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Card, CardContent } from "./ui/card";
-import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { tokenName } from "~~/utils/constant";
@@ -10,12 +9,12 @@ const DaiBalanceCard = () => {
   const { address } = useAccount();
 
   const { data: daiBalance, isLoading } = useScaffoldReadContract({
-    contractName: "Dai",
-    functionName: "balanceOf", ///should display the s_userBorrowed
+    contractName: "Lending",
+    functionName: "getUserBorrowed",
     args: [address],
   });
 
-  const tokenBalance = `${Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100}`;
+  const tokenBalance = `${Math.floor(Number(daiBalance || 0n))}`;
 
   return (
     <Card

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import RatioChange from "../ratio-change";
+import RatioChange from "../healthfactor-change";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";

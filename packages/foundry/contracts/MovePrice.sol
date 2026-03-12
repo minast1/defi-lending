@@ -16,7 +16,7 @@ contract MovePrice {
         IERC20(_daiToken).approve(address(dex), type(uint256).max);
     }
 
-    function movePrice(int256 size) public {
+    function movePrice(int256 size) public payable {
         if (size > 0) {
             require(address(this).balance >= uint256(size), "Not enough ETH");
             dex.swap{value: uint256(size)}(uint256(size));

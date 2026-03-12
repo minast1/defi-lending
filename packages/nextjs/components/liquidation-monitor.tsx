@@ -5,7 +5,6 @@ import { Skeleton } from "./ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import UserPosition from "./user-position";
 import { AlertTriangle, Users } from "lucide-react";
-import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldReadContract, useScaffoldWatchContractEvent } from "~~/hooks/scaffold-eth";
 
@@ -114,7 +113,7 @@ const LiquidationMonitor = () => {
                 <TableHead>User</TableHead>
                 <TableHead>Collateral</TableHead>
                 <TableHead>Debt</TableHead>
-                <TableHead>Ratio</TableHead>
+                <TableHead>HF</TableHead>
                 <TableHead className="text-left"></TableHead>
               </TableRow>
             </TableHeader>
@@ -128,7 +127,7 @@ const LiquidationMonitor = () => {
                   <UserPosition
                     key={position + index}
                     user={position}
-                    ethPrice={Number(formatEther(ethPrice || 0n))}
+                    ethPrice={Number(ethPrice || 0n)}
                     connectedAddress={connectedAddress || ""}
                   />
                 ))

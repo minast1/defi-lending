@@ -1,12 +1,12 @@
 import { isAddress } from "viem";
 import * as z from "zod";
-import { collateralRatio } from "~~/utils/constant";
-import { calculatePositionRatio } from "~~/utils/helpers";
 
 export const createDepositSchema = z
   .object({
     address: z.string().refine(val => isAddress(val), { error: "Not a valid ethereum address" }),
-    amount: z.coerce.number<number>({ error: "Please enter a valid amount" }),
+    amount: z.coerce
+      .number<number>({ error: "Please enter a valid amount" })
+      .positive({ message: "Amount must be greater than 0" }),
     availableBalance: z.number().nonnegative({ message: "Invalid available balance" }),
   })
   .check(ctx => {
@@ -39,17 +39,25 @@ export const createBorrowSchema = createDepositSchema
   .extend({
     price: z.number(),
     collateral: z.number(),
+    currentDebt: z.number(),
   })
   .omit({ availableBalance: true, address: true })
   .check(ctx => {
-    const positionRatio = calculatePositionRatio(ctx.value.collateral, ctx.value.amount, ctx.value.price);
-    if (positionRatio < collateralRatio) {
-      ctx.issues.push({
-        code: "custom",
-        message: `Unsafe position ratio for borrow amount ${ctx.value.amount}`,
-        input: ctx.value.amount,
-        path: ["amount"],
-      });
+    const COLLATERAL_RATIO = 1.2;
+    const collateralValDai = ctx.value.collateral * ctx.value.price;
+    const totalProposedDebt = ctx.value.amount + ctx.value.currentDebt;
+    if (totalProposedDebt > 0) {
+      const denom = totalProposedDebt * COLLATERAL_RATIO;
+      const hf = collateralValDai / denom;
+
+      if (hf < 1.0) {
+        ctx.issues.push({
+          code: "custom",
+          message: `This borrow would drop your Health Factor below 1.0 (Liquidatable)`,
+          input: ctx.value.amount,
+          path: ["amount"],
+        });
+      }
     }
   });
 

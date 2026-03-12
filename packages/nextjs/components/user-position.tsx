@@ -7,8 +7,6 @@ import { Address } from "@scaffold-ui/components";
 import clsx from "clsx";
 import { formatEther } from "viem";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { collateralRatio } from "~~/utils/constant";
-import { calculatePositionRatio } from "~~/utils/helpers";
 import { notification } from "~~/utils/scaffold-eth";
 
 type TProps = {
@@ -19,13 +17,13 @@ type TProps = {
 const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
   const { data: userCollateral } = useScaffoldReadContract({
     contractName: "Lending",
-    functionName: "s_userCollateral",
+    functionName: "getUserCollateral",
     args: [user],
   });
 
   const { data: userBorrowed } = useScaffoldReadContract({
     contractName: "Lending",
-    functionName: "s_userBorrowed",
+    functionName: "getUserBorrowed",
     args: [user],
   });
 
@@ -46,13 +44,18 @@ const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
     contractName: "Dai",
   });
 
-  const borrowedAmount = Number(formatEther(userBorrowed || 0n));
-  const ratio =
-    borrowedAmount === 0
-      ? "N/A"
-      : calculatePositionRatio(Number(formatEther(userCollateral || 0n)), borrowedAmount, ethPrice).toFixed(1);
+  const COLLATERAL_RATIO = 1.2;
+  const collateralInDai = Number(formatEther(userCollateral || 0n)) * ethPrice;
+  const borrowedAmount = Number(userBorrowed || 0n);
 
-  const isPositionSafe = ratio == "N/A" || Number(ratio) >= collateralRatio;
+  const calculateHF = (debt: number) => {
+    if (debt <= 0) return Infinity;
+    const hf = collateralInDai / (debt * COLLATERAL_RATIO);
+    return hf;
+  };
+
+  const hf = calculateHF(borrowedAmount);
+  const isPositionSafe = hf >= 1.0;
   const liquidatePosition = async () => {
     if (allowance === undefined || userBorrowed === undefined || basicLendingContract === undefined) return;
     try {
@@ -93,22 +96,20 @@ const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
       <TableCell className="text-primary font-medium w-[170px]">
         {Number(formatEther(userCollateral || 0n)).toFixed(2)} ETH
       </TableCell>
-      <TableCell className="text-warning font-medium">
-        {Number(formatEther(userBorrowed || 0n)).toFixed(2)} Dai
-      </TableCell>
+      <TableCell className="text-warning font-medium">{Number(userBorrowed || 0n).toFixed(1)} Dai</TableCell>
       <TableCell className="w-[170px]">
         <Badge
           className={clsx(
-            Number(ratio) < collateralRatio
+            hf < 1
               ? "bg-destructive text-white border-destructive"
-              : Number(ratio) < 200
+              : hf <= 2
                 ? "bg-warning text-white border-warning"
                 : "bg-green-400/60 text-white border-green-400",
             "font-mono",
           )}
           //className="font-mono"
         >
-          {ratio === "N/A" ? "N/A" : `${ratio}%`}
+          {hf === Infinity ? "N/A" : hf.toFixed(2)}
         </Badge>
       </TableCell>
       <TableCell className="text-right text-muted-foreground w-[100px]">

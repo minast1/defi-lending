@@ -37,7 +37,8 @@ contract DeployYourContract is ScaffoldETHDeploy {
 
         new FlashLoanLiquidator(address(i_lending), address(dex), address(dai));
         // Mint some tokens to MovePrice
-        dai.mintTo(address(i_movePrice), 10_000_000_000_000);
+        dai.mintTo(address(i_movePrice), 10000000000000);
+        // dai.mintTo(address(dex), 100000000000);
 
         // Mint tokens for Lending contract buffer
         dai.mintTo(address(i_lending), 1000000);

@@ -3,10 +3,10 @@
 import type { NextPage } from "next";
 import BorrowRepay from "~~/components/borrow-repay";
 import CollateralCard from "~~/components/collateral-card";
-import CollateralVizCard from "~~/components/collateral-viz-card";
 import DaiBalanceCard from "~~/components/dai-balance-card";
 import DepositWithdraw from "~~/components/deposit-and-withdraw";
-import HealthFactorCard from "~~/components/health-factor-card";
+import HealthFactor from "~~/components/health-factor";
+import HealthFactorCard from "~~/components/health-factorcard";
 import LiquidationMonitor from "~~/components/liquidation-monitor";
 import TransferSwap from "~~/components/transfer-swap";
 import TVLCard from "~~/components/tvl-card";
@@ -46,7 +46,7 @@ const Home: NextPage = () => {
           </div>
 
           <div className="md:col-span-2">
-            <CollateralVizCard />
+            <HealthFactor />
           </div>
         </div>
       </div>

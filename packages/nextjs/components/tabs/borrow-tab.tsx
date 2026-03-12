@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import RatioChange from "../ratio-change";
+import React, { useEffect, useState } from "react";
+import HealthFactorChange from "../healthfactor-change";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
@@ -7,13 +7,14 @@ import { Spinner } from "../ui/spinner";
 import { TabsContent } from "../ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { formatEther, parseEther } from "viem";
-import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { formatEther } from "viem";
+import { useAccount } from "wagmi";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { CreateBorrowSchema, createBorrowSchema } from "~~/lib/schema";
 
 const BorrowTab = () => {
   const { address } = useAccount();
+  const [loading, setLoading] = useState(false);
   const { data: ethPrice } = useScaffoldReadContract({
     contractName: "DEX",
     functionName: "currentPrice",
@@ -21,51 +22,65 @@ const BorrowTab = () => {
 
   const form = useForm<CreateBorrowSchema>({
     resolver: zodResolver(createBorrowSchema),
+    defaultValues: {
+      amount: 0,
+      price: 0,
+      collateral: 0,
+      currentDebt: 0,
+    },
   });
 
   const { data: userCollateral } = useScaffoldReadContract({
     contractName: "Lending",
-    functionName: "s_userCollateral",
+    functionName: "getUserCollateral",
     args: [address],
   });
 
-  const {
-    writeContractAsync: writeLendingContract,
-    isPending,
-    data: hash,
-  } = useScaffoldWriteContract({
+  const { data: userBorrowed } = useScaffoldReadContract({
+    contractName: "Lending",
+    functionName: "getUserBorrowed",
+    args: [address],
+  });
+  const { writeContractAsync: writeLendingContract, isMining } = useScaffoldWriteContract({
     contractName: "Lending",
   });
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash,
-  });
-
   useEffect(() => {
-    if (isConfirmed) {
-      form.reset({
-        price: Number(formatEther(ethPrice || 0n)),
-        collateral: Number(formatEther(userCollateral || 0n)),
-      });
+    if (ethPrice !== undefined && userCollateral !== undefined) {
+      form.setValue("price", Number(ethPrice)); // No formatEther here!
+      form.setValue("collateral", Number(formatEther(userCollateral)));
+      form.setValue("currentDebt", Number(userBorrowed || 0n));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmed]);
-
-  //Reset form Default values when they are ready
-  useEffect(() => {
-    form.reset({
-      price: Number(formatEther(ethPrice || 0n)),
-      collateral: Number(formatEther(userCollateral || 0n)),
-    });
-  }, [ethPrice, userCollateral, form]);
-
+  }, [ethPrice, userCollateral, userBorrowed, form]);
+  // console.log({
+  //   ethPrice: Number(ethPrice),
+  //   collateral: Number(formatEther(userCollateral || 0n)) * Number(ethPrice),
+  //   currentDebt: Number(userBorrowed || 0n),
+  // });
   const handleBorrow = async (data: CreateBorrowSchema) => {
-    console.log(data);
+    setLoading(true);
     try {
-      await writeLendingContract({
-        functionName: "borrowDai",
-        args: [parseEther(data.amount.toString())],
-      });
+      await writeLendingContract(
+        {
+          functionName: "borrowDai",
+          args: [BigInt(data.amount)],
+        },
+        {
+          onError: error => {
+            console.log(error);
+            setLoading(false);
+          },
+          onBlockConfirmation: () => {
+            setLoading(false);
+            form.reset({
+              amount: 0,
+              price: 0,
+              collateral: 0,
+              currentDebt: 0,
+            });
+          },
+        },
+      );
     } catch (error) {
       console.error("Error borrowing corn:", error);
     }
@@ -83,9 +98,9 @@ const BorrowTab = () => {
                 <FieldLabel className="text-sm text-inherit flex justify-between">
                   Amount
                   {address && (
-                    <RatioChange
+                    <HealthFactorChange
                       user={address}
-                      ethPrice={Number(formatEther(ethPrice || 0n))}
+                      ethPrice={Number(ethPrice || 0n)}
                       inputAmount={Number(field.value || 0)}
                     />
                   )}
@@ -106,7 +121,7 @@ const BorrowTab = () => {
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground hover:cursor-pointer"
             //disabled={!amount}
           >
-            {isPending || isConfirming ? (
+            {loading || isMining ? (
               <>
                 <Spinner className="mr-2" />
                 Please Wait...
