@@ -10,21 +10,23 @@ import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContr
 import { notification } from "~~/utils/scaffold-eth";
 
 type TProps = {
-  user: string;
+  user: any;
   ethPrice: number;
+  idx: number;
   connectedAddress: string;
 };
-const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
-  const { data: userCollateral } = useScaffoldReadContract({
-    contractName: "Lending",
-    functionName: "getUserCollateral",
-    args: [user],
-  });
-
+const UserPosition = ({ user, ethPrice, connectedAddress, idx }: TProps) => {
+  const [isLoading, setIsLoading] = React.useState(false);
   const { data: userBorrowed } = useScaffoldReadContract({
     contractName: "Lending",
-    functionName: "getUserBorrowed",
-    args: [user],
+    functionName: "s_userBorrowed",
+    args: [user.user],
+  });
+
+  const { data: userCollateral } = useScaffoldReadContract({
+    contractName: "Lending",
+    functionName: "s_userCollateral",
+    args: [user.user],
   });
 
   const { data: basicLendingContract } = useDeployedContractInfo({
@@ -34,13 +36,19 @@ const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
   const { data: allowance } = useScaffoldReadContract({
     contractName: "Dai",
     functionName: "allowance",
-    args: [user, basicLendingContract?.address],
+    args: [user.user, basicLendingContract?.address],
   });
 
-  const { writeContractAsync: writeLendingContract, isPending: isLiquidating } = useScaffoldWriteContract({
+  const { data: liquidatorDaiBalance } = useScaffoldReadContract({
+    contractName: "Dai",
+    functionName: "balanceOf",
+    args: [connectedAddress],
+  });
+
+  const { writeContractAsync: writeLendingContract, isMining: isLiquidating } = useScaffoldWriteContract({
     contractName: "Lending",
   });
-  const { writeContractAsync: writeCornContract } = useScaffoldWriteContract({
+  const { writeContractAsync: writeCornContract, isMining: isApproving } = useScaffoldWriteContract({
     contractName: "Dai",
   });
 
@@ -58,40 +66,64 @@ const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
   const isPositionSafe = hf >= 1.0;
   const liquidatePosition = async () => {
     if (allowance === undefined || userBorrowed === undefined || basicLendingContract === undefined) return;
+    if (Number(liquidatorDaiBalance) < Number(userBorrowed)) {
+      notification.error("You don't have enough Dai to liquidate");
+      return;
+    }
+    setIsLoading(true);
     try {
-      if (allowance < userBorrowed) {
-        await writeCornContract({
-          functionName: "approve",
-          args: [basicLendingContract?.address, userBorrowed],
-        });
+      if ((allowance || 0n) < userBorrowed) {
+        await writeCornContract(
+          {
+            functionName: "approve",
+            args: [basicLendingContract?.address, userBorrowed],
+          },
+          {
+            onBlockConfirmation: async () => {
+              await writeLendingContract(
+                {
+                  functionName: "liquidate",
+                  args: [user.user],
+                },
+                {
+                  onBlockConfirmation: () => {
+                    const borrowedValue = Number(userBorrowed || 0n) / ethPrice;
+                    const totalCollateral = Number(formatEther(userCollateral || 0n));
+                    const rewardValue =
+                      borrowedValue * 1.1 > totalCollateral
+                        ? totalCollateral.toFixed(2)
+                        : (borrowedValue * 1.1).toFixed(2);
+                    const shortAddress = user.user.slice(0, 6) + "..." + user.user.slice(-4);
+
+                    notification.success(
+                      <>
+                        <p className="font-bold mt-0 mb-1">Liquidation successful</p>
+                        <p className="m-0">You liquidated {shortAddress}&apos;s position.</p>
+                        <p className="m-0">
+                          You repaid {Number(userBorrowed).toFixed(2)} Dai and received {rewardValue} in ETH collateral.
+                        </p>
+                      </>,
+                      {
+                        duration: 7000,
+                      },
+                    );
+                    setIsLoading(false);
+                  },
+                },
+              );
+            },
+          },
+        );
       }
-      await writeLendingContract({
-        functionName: "liquidate",
-        args: [user],
-      });
-      const borrowedValue = Number(formatEther(userBorrowed || 0n)) / ethPrice;
-      const totalCollateral = Number(formatEther(userCollateral || 0n));
-      const rewardValue =
-        borrowedValue * 1.1 > totalCollateral ? totalCollateral.toFixed(2) : (borrowedValue * 1.1).toFixed(2);
-      const shortAddress = user.slice(0, 6) + "..." + user.slice(-4);
-      notification.success(
-        <>
-          <p className="font-bold mt-0 mb-1">Liquidation successful</p>
-          <p className="m-0">You liquidated {shortAddress}&apos;s position.</p>
-          <p className="m-0">
-            You repaid {Number(formatEther(userBorrowed)).toFixed(2)} Dai and received {rewardValue} in ETH collateral.
-          </p>
-        </>,
-      );
     } catch (e) {
       console.error("Error liquidating position:", e);
     }
   };
 
   return (
-    <TableRow key={user} className={clsx("hover:bg-muted/30", connectedAddress === user && "bg-muted/30")}>
+    <TableRow key={idx} className={clsx("hover:bg-muted/30", connectedAddress === user && "bg-muted/30")}>
       <TableCell className="font-mono text-sm w-[220px]">
-        <Address address={user} disableAddressLink format="short" size="sm" />
+        <Address address={user.user} disableAddressLink format="short" size="sm" />
       </TableCell>
       <TableCell className="text-primary font-medium w-[170px]">
         {Number(formatEther(userCollateral || 0n)).toFixed(2)} ETH
@@ -118,12 +150,12 @@ const UserPosition = ({ user, ethPrice, connectedAddress }: TProps) => {
           variant={"outline"}
           className={clsx(
             "text-destructive rounded-4xl h-6 text-xs border-red-600 hover:bg-red-600/30 hover:cursor-pointer",
-            (connectedAddress === user || isPositionSafe) && "hidden",
+            (connectedAddress === user.user || isPositionSafe) && "hidden",
           )}
           disabled={isPositionSafe}
           onClick={liquidatePosition}
         >
-          {isLiquidating ? <Spinner /> : "Liquidate"}
+          {isLiquidating || isApproving || isLoading ? <Spinner /> : "Liquidate"}
         </Button>
       </TableCell>
     </TableRow>

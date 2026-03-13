@@ -1,60 +1,17 @@
-import { useMemo, useRef } from "react";
-import { useScaffoldEventHistory } from "../hooks/scaffold-eth/useScaffoldEventHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Skeleton } from "./ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import UserPosition from "./user-position";
 import { AlertTriangle, Users } from "lucide-react";
 import { useAccount } from "wagmi";
-import { useScaffoldReadContract, useScaffoldWatchContractEvent } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import useLiquidationHistory from "~~/hooks/use-liquidation-history";
 
 const LiquidationMonitor = () => {
   const { address: connectedAddress } = useAccount();
-  // const [users, setUsers] = useState<string[]>([]);
+  const { data: contract } = useDeployedContractInfo({ contractName: "Lending" });
 
-  const {
-    data: events,
-    isLoading: isLoading,
-    // error: errorReadingEvents,
-  } = useScaffoldEventHistory({
-    contractName: "Lending",
-    eventName: "CollateralAdded",
-    watch: true,
-    blockData: false,
-    transactionData: false,
-    receiptData: false,
-  });
-
-  const liveLogsRef = useRef<typeof events>([]);
-
-  useScaffoldWatchContractEvent({
-    contractName: "Lending",
-    eventName: "CollateralAdded",
-    onLogs: logs => {
-      logs.forEach(log => {
-        liveLogsRef.current.push(log);
-      });
-    },
-  });
-
-  /** 4️⃣ Derive users */
-  const users = useMemo(() => {
-    const set = new Set<string>();
-
-    events?.forEach(event => {
-      if (event.args?.user) {
-        set.add(event.args.user);
-      }
-    });
-
-    liveLogsRef.current.forEach(log => {
-      if (log?.args?.user) {
-        set.add(log.args.user);
-      }
-    });
-
-    return Array.from(set);
-  }, [events]);
+  const { events, isLoading, totalLiquidations } = useLiquidationHistory(contract?.address, contract?.abi);
 
   const { data: ethPrice } = useScaffoldReadContract({
     contractName: "DEX",
@@ -120,15 +77,16 @@ const LiquidationMonitor = () => {
             <TableBody>
               {isLoading || events === undefined ? (
                 <LoadingSkeleton />
-              ) : users.length === 0 ? (
+              ) : totalLiquidations === 0 ? (
                 <EmptyState />
               ) : (
-                users.map((position, index) => (
+                events.map((position, index) => (
                   <UserPosition
-                    key={position + index}
+                    key={index}
                     user={position}
                     ethPrice={Number(ethPrice || 0n)}
                     connectedAddress={connectedAddress || ""}
+                    idx={index + 1}
                   />
                 ))
               )}

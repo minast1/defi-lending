@@ -42,8 +42,8 @@ const RepayTab = () => {
   });
 
   const { data: daiBalance } = useScaffoldReadContract({
-    contractName: "Lending",
-    functionName: "getUserBorrowed",
+    contractName: "Dai",
+    functionName: "balanceOf",
     args: [address],
   });
 
@@ -67,26 +67,36 @@ const RepayTab = () => {
 
     if (supportsAtomicActions) {
       console.log("Batch Tx Initiated ....");
-      executeBatch({
-        calls: [
-          {
-            to: daiContract?.address as `0x${string}`,
-            data: encodeFunctionData({
-              abi: daiContract?.abi as any,
-              functionName: "approve",
-              args: [basicLendingContract?.address, BigInt(data.availableBalance)],
-            }),
+      executeBatch(
+        {
+          calls: [
+            {
+              to: daiContract?.address as `0x${string}`,
+              data: encodeFunctionData({
+                abi: daiContract?.abi as any,
+                functionName: "approve",
+                args: [basicLendingContract?.address, BigInt(data.availableBalance)],
+              }),
+            },
+            {
+              to: basicLendingContract?.address as `0x${string}`,
+              data: encodeFunctionData({
+                abi: basicLendingContract?.abi as any,
+                functionName: "repayDai",
+                args: [BigInt(data.amount)],
+              }),
+            },
+          ],
+        },
+        {
+          onSettled: () => {
+            form.reset({
+              availableBalance: 0,
+              amount: 0,
+            });
           },
-          {
-            to: basicLendingContract?.address as `0x${string}`,
-            data: encodeFunctionData({
-              abi: basicLendingContract?.abi as any,
-              functionName: "repayDai",
-              args: [BigInt(data.amount)],
-            }),
-          },
-        ],
-      });
+        },
+      );
     } else {
       //Not Supported
       try {

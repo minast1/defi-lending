@@ -9,8 +9,8 @@ const DaiBalanceCard = () => {
   const { address } = useAccount();
 
   const { data: daiBalance, isLoading } = useScaffoldReadContract({
-    contractName: "Lending",
-    functionName: "getUserBorrowed",
+    contractName: "Dai",
+    functionName: "balanceOf",
     args: [address],
   });
 
