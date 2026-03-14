@@ -307,15 +307,19 @@ contract LendingTest is Test {
         //Simulate Price drop
         ///drop the price of corn such that the user can be liquidated
         oracle.movePrice(2000);
-        console.log("New Price from DEX", dex.currentPrice());
+        //  console.log("New Price from DEX", dex.currentPrice());
 
         vm.startPrank(liquidator);
         dai.approve(address(lending), 833);
 
         uint256 liquidatorEthBefore = liquidator.balance;
+        uint256 daiBalance = dai.balanceOf(address(lending));
         lending.liquidate(alice);
         assertEq(lending.s_userBorrowed(alice), 0);
+
         assertTrue(liquidator.balance > liquidatorEthBefore);
+        //Assert Dai balance stays the same after liquidation
+        assertEq(dai.balanceOf(address(lending)), daiBalance);
 
         vm.stopPrank();
     }

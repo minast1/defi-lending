@@ -7,15 +7,19 @@ import { Spinner } from "../ui/spinner";
 import { TabsContent } from "../ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { formatEther, parseEther } from "viem";
-import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount } from "wagmi";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { CreateTransferSchema, createTransferSchema } from "~~/lib/schema";
 
 const TransferTab = () => {
   const { address } = useAccount();
+  const [isLoading, setIsLoading] = React.useState(false);
   const form = useForm<CreateTransferSchema>({
     resolver: zodResolver(createTransferSchema),
+    defaultValues: {
+      availableBalance: 0,
+      amount: 0,
+    },
   });
 
   const { data: daiBalance } = useScaffoldReadContract({
@@ -24,38 +28,32 @@ const TransferTab = () => {
     args: [address],
   });
 
-  const {
-    writeContractAsync: writeDaiContract,
-    isPending,
-    data: hash,
-  } = useScaffoldWriteContract({
+  const { writeContractAsync: writeDaiContract, isMining } = useScaffoldWriteContract({
     contractName: "Dai",
   });
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash,
-  });
-  //Reset form Default values when they are ready
   useEffect(() => {
-    form.reset({
-      availableBalance: Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100,
-    });
+    if (daiBalance !== undefined) {
+      form.setValue("availableBalance", Number(daiBalance || 0n));
+    }
   }, [daiBalance, form]);
 
-  useEffect(() => {
-    if (isConfirmed) {
-      form.reset({
-        availableBalance: Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmed, form]);
-
   const handleTransfer = async (data: CreateTransferSchema) => {
-    await writeDaiContract({
-      functionName: "transfer",
-      args: [data.address, parseEther(data.amount.toString())],
-    });
+    await writeDaiContract(
+      {
+        functionName: "transfer",
+        args: [data.address, BigInt(data.amount)],
+      },
+      {
+        onBlockConfirmation: () => {
+          setIsLoading(false);
+          form.reset({
+            availableBalance: 0,
+            amount: 0,
+          });
+        },
+      },
+    );
   };
   return (
     <TabsContent value="transfer" className="space-y-4">
@@ -106,7 +104,7 @@ const TransferTab = () => {
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground hover:cursor-pointer"
             //disabled={!amount}
           >
-            {isPending || isConfirming ? (
+            {isLoading || isMining ? (
               <>
                 <Spinner className="mr-2" />
                 Please Wait...

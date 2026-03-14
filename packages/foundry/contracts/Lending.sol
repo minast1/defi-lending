@@ -225,7 +225,7 @@ contract Lending is Ownable {
             revert Lending__TransferFailed();
 
         //adjust dai.balanceOf(account);to reflect this
-        dai.burn(user, userDebt);
+        dai.burn(address(this), userDebt);
 
         //Send ETH to liquidator
         (bool success, ) = payable(msg.sender).call{value: totalToSeize}("");

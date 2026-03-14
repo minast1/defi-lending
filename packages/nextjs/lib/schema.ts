@@ -68,7 +68,7 @@ export const createRepaySchema = createDepositSchema
     if (ctx.value.amount > ctx.value.availableBalance) {
       ctx.issues.push({
         code: "custom",
-        message: "Amount exceeds your available Dai balance",
+        message: "Amount exceeds your available dai balance",
         input: ctx.value.amount,
         path: ["amount"],
       });
@@ -89,7 +89,7 @@ export const createTransferSchema = createDepositSchema.extend({}).check(ctx => 
   if (ctx.value.amount > ctx.value.availableBalance) {
     ctx.issues.push({
       code: "custom",
-      message: "Amount exceeds available balance",
+      message: "Amount exceeds your available dai balance",
       input: ctx.value.amount,
       path: ["amount"],
     });
