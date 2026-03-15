@@ -85,7 +85,7 @@ export function useBatchTx() {
           notification.remove(notificationId);
         }
         console.error("⚡️ ~ file: useTransactor.ts ~ error", error);
-        const message = getParsedErrorWithAllAbis(error, 1);
+        const message = getParsedErrorWithAllAbis(error, 11155111);
 
         if (message.includes("No matching bundle found")) {
           notification.error(<TxnNotification message={"Transaction was rejected by user.."} />);
