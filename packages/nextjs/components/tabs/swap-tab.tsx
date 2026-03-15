@@ -18,10 +18,10 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
   const { supportsAtomicActions } = useGetWalletCapabilities();
   const { executeBatch } = useBatchTx();
 
-  const { writeContractAsync: writeDEXContract, isPending } = useScaffoldWriteContract({
+  const { writeContractAsync: writeDEXContract, isMining: isDEXMining } = useScaffoldWriteContract({
     contractName: "DEX",
   });
-  const { writeContractAsync: writeDaiContract } = useScaffoldWriteContract({
+  const { writeContractAsync: writeDaiContract, isMining: isDaiMining } = useScaffoldWriteContract({
     contractName: "Dai",
   });
   const { data: daiContract } = useDeployedContractInfo({
@@ -32,15 +32,60 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
     contractName: "DEX",
   });
 
+  const form = useForm<CreateSwapSchema>({
+    resolver: zodResolver(createSwapSchema),
+    defaultValues: {
+      activeField: "DAI",
+      dai: {
+        amount: "",
+        availableBalance: daiBalance,
+      },
+      eth: {
+        amount: "",
+        availableBalance: balance,
+      },
+    },
+    mode: "onChange",
+  });
+
+  //const selectedAsset = useWatch({ control: form.control, name: "selected" });
+  const daiAmount = useWatch({ control: form.control, name: "dai.amount" });
+  const ethAmount = useWatch({ control: form.control, name: "eth.amount" });
+  const activeField = useWatch({ control: form.control, name: "activeField" });
+
+  const convert = (val: string, toEth: boolean) => {
+    const num = parseFloat(val);
+    if (isNaN(num) || num <= 0 || !ETHprice) return "";
+    return toEth ? (num / ETHprice).toFixed(4) : (num * ETHprice).toFixed(1);
+  };
+
+  /** Sync ETH when DAI changes */
+  useEffect(() => {
+    if (activeField === "DAI") {
+      const result = convert(daiAmount, true);
+      form.setValue("eth.amount", result, { shouldValidate: !!result });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [daiAmount, activeField, ETHprice]);
+
+  /** Sync DAI when ETH changes */
+  useEffect(() => {
+    if (activeField === "ETH") {
+      const result = convert(ethAmount, false);
+      form.setValue("dai.amount", result, { shouldValidate: !!result });
+      return;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ethAmount, activeField, ETHprice]);
+
   const handleSwap = async (data: CreateSwapSchema) => {
-    if (data.activeField === "ETH") {
+    if (activeField === "ETH") {
       await writeDEXContract({
         functionName: "swap",
-        args: [parseEther(data.eth.amount.toString())],
-        value: parseEther(data.eth.amount.toString()),
+        args: [parseEther(data.eth.amount)],
+        value: parseEther(data.eth.amount),
       });
     } else {
-      console.log("Swapping DAI to ETH....");
       if (supportsAtomicActions) {
         console.log("Batch Tx Initiated ....");
         executeBatch({
@@ -50,7 +95,7 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
               data: encodeFunctionData({
                 abi: daiContract?.abi as any,
                 functionName: "approve",
-                args: [dexContract?.address, parseEther(data.dai.availableBalance.toString())],
+                args: [dexContract?.address, BigInt(data.dai.availableBalance)],
               }),
             },
             {
@@ -58,7 +103,7 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
               data: encodeFunctionData({
                 abi: dexContract?.abi as any,
                 functionName: "swap",
-                args: [parseEther(data.dai.amount.toString())],
+                args: [BigInt(data.dai.amount)],
               }),
             },
           ],
@@ -69,11 +114,11 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
         try {
           await writeDaiContract({
             functionName: "approve",
-            args: [dexContract?.address, parseEther(data.dai.availableBalance.toString())],
+            args: [dexContract?.address, BigInt(data.dai.availableBalance)],
           });
           await writeDEXContract({
             functionName: "swap",
-            args: [parseEther(data.dai.amount.toString())],
+            args: [BigInt(data.dai.amount)],
           });
         } catch (error) {
           console.error("Error repaying dai:", error);
@@ -81,70 +126,6 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
       }
     } //End of main else
   };
-
-  const ethToToken = (ethAmount: string): string => {
-    const tokenAmount = Number(ethAmount) * Number(ETHprice);
-    return tokenAmount.toFixed(8);
-  };
-
-  const tokenToETH = (tokenAmount: string): string => {
-    const ethAmount = Number(tokenAmount) / Number(ETHprice);
-
-    return ethAmount.toFixed(8);
-  };
-
-  const form = useForm<CreateSwapSchema>({
-    resolver: zodResolver(createSwapSchema),
-    defaultValues: {
-      activeField: "DAI",
-      dai: {
-        amount: "0",
-        availableBalance: daiBalance,
-      },
-      eth: {
-        amount: "0",
-        availableBalance: balance,
-      },
-    },
-    mode: "onChange",
-  });
-  //const selectedAsset = useWatch({ control: form.control, name: "selected" });
-  const daiAmount = useWatch({ control: form.control, name: "dai.amount" });
-  const ethAmount = useWatch({ control: form.control, name: "eth.amount" });
-  const activeField = useWatch({ control: form.control, name: "activeField" });
-
-  /** Sync ETH when DAI changes */
-  useEffect(() => {
-    if (activeField !== "DAI") return;
-    // const ethVal =  || "0";
-    if (!daiAmount || isNaN(Number(daiAmount))) {
-      form.setValue("eth.amount", "0");
-    }
-
-    form.setValue("eth.amount", tokenToETH(String(daiAmount)), { shouldValidate: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [daiAmount, activeField]);
-
-  /** Sync DAI when ETH changes */
-  useEffect(() => {
-    if (activeField !== "ETH") {
-      ////form.setValue("eth.amount", "0");
-      return;
-    }
-    if (!ethAmount || isNaN(Number(ethAmount))) {
-      form.setValue("dai.amount", "0");
-    }
-
-    form.setValue("dai.amount", ethToToken(String(ethAmount)), { shouldValidate: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ethAmount, activeField]);
-
-  //Update balances if props change
-  useEffect(() => {
-    form.setValue("dai.availableBalance", daiBalance);
-    form.setValue("eth.availableBalance", balance);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [balance, daiBalance]);
 
   return (
     <TabsContent value="swap" className="space-y-1">
@@ -209,7 +190,7 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
                   </div>
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Buy ETH"
+                      placeholder="Buy Dai"
                       id="eth"
                       value={field.value?.toString() ?? "0"}
                       onFocus={() => form.setValue("activeField", "ETH")}
@@ -238,7 +219,7 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
             variant="default"
           >
             <ArrowRightLeft className="h-4 w-4 mr-2" />
-            {isPending ? (
+            {isDaiMining || isDEXMining ? (
               <>
                 <Spinner className="mr-2" /> ...Swapping
               </>

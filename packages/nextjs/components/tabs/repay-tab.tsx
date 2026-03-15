@@ -25,10 +25,17 @@ const RepayTab = () => {
     functionName: "currentPrice",
   });
 
+  const { data: userDebt } = useScaffoldReadContract({
+    contractName: "Lending",
+    functionName: "getUserBorrowed",
+    args: [address],
+  });
+
   const form = useForm<CreateRepaySchema>({
     resolver: zodResolver(createRepaySchema),
     defaultValues: {
       availableBalance: 0,
+      currentDebt: 0,
       amount: 0,
     },
   });
@@ -56,10 +63,11 @@ const RepayTab = () => {
   });
 
   useEffect(() => {
-    if (daiBalance !== undefined) {
+    if (daiBalance !== undefined && userDebt !== undefined) {
       form.setValue("availableBalance", Number(daiBalance || 0n));
+      form.setValue("currentDebt", Number(userDebt || 0n));
     }
-  }, [daiBalance, form]);
+  }, [daiBalance, form, userDebt]);
 
   const handleBorrow = async (data: CreateRepaySchema) => {
     // If wallet supports batching – use EIP-5792

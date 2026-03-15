@@ -62,7 +62,9 @@ export const createBorrowSchema = createDepositSchema
   });
 
 export const createRepaySchema = createDepositSchema
-  .extend({})
+  .extend({
+    currentDebt: z.number(),
+  })
   .omit({ address: true })
   .check(ctx => {
     if (ctx.value.amount > ctx.value.availableBalance) {
@@ -72,16 +74,15 @@ export const createRepaySchema = createDepositSchema
         input: ctx.value.amount,
         path: ["amount"],
       });
-
-      // if (ctx.value.amount > ctx.value.availableBalance) {  //Fix this
-      //   ///Fix this  <-
-      //   ctx.issues.push({
-      //     code: "custom",
-      //     message: "Account has no borrowed assets",
-      //     input: ctx.value.amount,
-      //     path: ["amount"],
-      //   });
-      // }
+    }
+    if (ctx.value.amount > ctx.value.currentDebt) {
+      //Fix this
+      ctx.issues.push({
+        code: "custom",
+        message: "Amount exceeds your current debt",
+        input: ctx.value.amount,
+        path: ["amount"],
+      });
     }
   });
 

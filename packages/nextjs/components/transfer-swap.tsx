@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { useWatchBalance } from "@scaffold-ui/hooks";
 import { ArrowRightLeft, Send } from "lucide-react";
-import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
@@ -46,8 +45,8 @@ const TransferSwap = () => {
 
           <TransferTab />
           <SwapTab
-            ETHprice={Number(formatEther(ETHprice || 0n))}
-            daiBalance={Math.floor(Number(formatEther(daiBalance || 0n)) * 100) / 100}
+            ETHprice={Number(ETHprice || 0n)}
+            daiBalance={Number(daiBalance || 0n)}
             balance={Number(balance?.formatted)}
           />
         </Tabs>
