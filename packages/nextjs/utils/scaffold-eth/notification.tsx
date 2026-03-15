@@ -82,7 +82,7 @@ export const notification = {
     return Notification({ content, status: "info", className: "bg-accent/20 border-accent/50", ...options });
   },
   warning: (content: React.ReactNode, options?: NotificationOptions) => {
-    return Notification({ content, status: "warning", ...options });
+    return Notification({ content, status: "warning", className: "bg-warning/20 border-warning/50", ...options });
   },
   error: (content: React.ReactNode, options?: NotificationOptions) => {
     return Notification({ content, status: "error", className: "bg-destructive/20 border-destructive/50", ...options });

@@ -2,15 +2,18 @@ import React, { useMemo } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
-import { useFetchNativeCurrencyPrice } from "@scaffold-ui/hooks";
+import { useFetchNativeCurrencyPrice, useWatchBalance } from "@scaffold-ui/hooks";
 import { AlertCircle, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
-import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useScaffoldReadContract, useScaffoldWriteContract, useTargetNetwork } from "~~/hooks/scaffold-eth";
+import { notification } from "~~/utils/scaffold-eth";
 
 const HealthFactor = () => {
   const { price: ethPrice } = useFetchNativeCurrencyPrice();
   const { address: user } = useAccount();
+  const { targetNetwork } = useTargetNetwork();
+  const { data: balance } = useWatchBalance({ address: user, chainId: targetNetwork.id });
 
   const { data: healthFactor } = useScaffoldReadContract({
     contractName: "Lending",
@@ -43,6 +46,11 @@ const HealthFactor = () => {
   const { writeContractAsync } = useScaffoldWriteContract({ contractName: "MovePrice" });
 
   const movePrice = async (direction: "up" | "down") => {
+    if (!balance) return;
+    if (direction === "down" && balance.value <= parseEther("0.3")) {
+      notification.warning("A minimum of 0.3 ETH is required to move the price down");
+      return;
+    }
     const amount = parseEther("0.3");
     const daiAmount = BigInt(100);
     const amountToSell = direction === "down" ? amount : -daiAmount;
