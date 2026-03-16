@@ -20,6 +20,7 @@ const useLiquidationHistory = (contractAddress: `0x${string}` | undefined, contr
       const logs = await publicClient!.getLogs({
         address: contractAddress as `0x${string}`,
         fromBlock: BigInt(process.env.NEXT_PUBLIC_DEPLOYMENT_BLOCK || 0),
+        toBlock: "latest",
         event: CollateralAddedAbi,
       });
 
@@ -46,7 +47,6 @@ const useLiquidationHistory = (contractAddress: `0x${string}` | undefined, contr
   useWatchContractEvent({
     address: contractAddress,
     abi: contractAbi,
-    fromBlock: BigInt(process.env.NEXT_PUBLIC_DEPLOYMENT_BLOCK || 0),
     onLogs: () => {
       console.log("New Liquidation detected! Refetching history...");
       refetch();
