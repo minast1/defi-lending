@@ -46,7 +46,7 @@ const useLiquidationHistory = (contractAddress: `0x${string}` | undefined, contr
   useWatchContractEvent({
     address: contractAddress,
     abi: contractAbi,
-    fromBlock: BigInt(0),
+    fromBlock: BigInt(process.env.NEXT_PUBLIC_DEPLOYMENT_BLOCK || 0),
     onLogs: () => {
       console.log("New Liquidation detected! Refetching history...");
       refetch();
