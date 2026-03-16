@@ -48,6 +48,7 @@ export const Header = () => {
         <div className="flex items-center gap-3">
           <RainbowKitCustomConnectButton />
           {isLocalNetwork && !isMobile && <FaucetButton />}
+          {!isLocalNetwork && !isMobile && <TestnetFaucetButton />}
           {isMobile ? null : <SwitchTheme />}
           {/* Mobile menu */}
           <Sheet open={open} onOpenChange={setOpen}>
