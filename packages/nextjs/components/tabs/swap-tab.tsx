@@ -8,16 +8,16 @@ import { TabsContent } from "../ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowDownUp, ArrowRightLeft } from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { encodeFunctionData, parseEther } from "viem";
+import { parseEther } from "viem";
 import { useDeployedContractInfo, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { useBatchTx } from "~~/hooks/use-batchTx";
-import { useGetWalletCapabilities } from "~~/hooks/use-getwallet-capabilities";
+//import { useBatchTx } from "~~/hooks/use-batchTx";
+//import { useGetWalletCapabilities } from "~~/hooks/use-getwallet-capabilities";
 import { CreateSwapSchema, createSwapSchema } from "~~/lib/schema";
 
 const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance: number; daiBalance: number }) => {
-  const { supportsAtomicActions } = useGetWalletCapabilities();
+  // const { supportsAtomicActions } = useGetWalletCapabilities();
 
-  const { executeBatch } = useBatchTx();
+  // const { executeBatch } = useBatchTx();
 
   const { writeContractAsync: writeDEXContract, isMining: isDEXMining } = useScaffoldWriteContract({
     contractName: "DEX",
@@ -25,9 +25,9 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
   const { writeContractAsync: writeDaiContract, isMining: isDaiMining } = useScaffoldWriteContract({
     contractName: "Dai",
   });
-  const { data: daiContract } = useDeployedContractInfo({
-    contractName: "Dai",
-  });
+  // const { data: daiContract } = useDeployedContractInfo({
+  //   contractName: "Dai",
+  // });
 
   const { data: dexContract } = useDeployedContractInfo({
     contractName: "DEX",
@@ -96,44 +96,44 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
         value: parseEther(data.eth.amount),
       });
     } else {
-      if (supportsAtomicActions) {
-        console.log("Batch Tx Initiated ....");
-        executeBatch({
-          calls: [
-            {
-              to: daiContract?.address as `0x${string}`,
-              data: encodeFunctionData({
-                abi: daiContract?.abi as any,
-                functionName: "approve",
-                args: [dexContract?.address, BigInt(data.dai.availableBalance)],
-              }),
-            },
-            {
-              to: dexContract?.address as `0x${string}`,
-              data: encodeFunctionData({
-                abi: dexContract?.abi as any,
-                functionName: "swap",
-                args: [BigInt(data.dai.amount)],
-              }),
-            },
-          ],
+      // if (supportsAtomicActions) {
+      //   console.log("Batch Tx Initiated ....");
+      //   executeBatch({
+      //     calls: [
+      //       {
+      //         to: daiContract?.address as `0x${string}`,
+      //         data: encodeFunctionData({
+      //           abi: daiContract?.abi as any,
+      //           functionName: "approve",
+      //           args: [dexContract?.address, BigInt(data.dai.availableBalance)],
+      //         }),
+      //       },
+      //       {
+      //         to: dexContract?.address as `0x${string}`,
+      //         data: encodeFunctionData({
+      //           abi: dexContract?.abi as any,
+      //           functionName: "swap",
+      //           args: [BigInt(data.dai.amount)],
+      //         }),
+      //       },
+      //     ],
+      //   });
+      // } else {
+      //Not Supported
+      console.log("Not Supported Write...");
+      try {
+        await writeDaiContract({
+          functionName: "approve",
+          args: [dexContract?.address, BigInt(data.dai.amount)],
         });
-      } else {
-        //Not Supported
-        console.log("Not Supported Write...");
-        try {
-          await writeDaiContract({
-            functionName: "approve",
-            args: [dexContract?.address, BigInt(data.dai.amount)],
-          });
-          await writeDEXContract({
-            functionName: "swap",
-            args: [BigInt(data.dai.amount)],
-          });
-        } catch (error) {
-          console.error("Error repaying dai:", error);
-        }
-      } //End of main else
+        await writeDEXContract({
+          functionName: "swap",
+          args: [BigInt(data.dai.amount)],
+        });
+      } catch (error) {
+        console.error("Error repaying dai:", error);
+      }
+      //} //End of main else
     }
   };
 
