@@ -98,16 +98,17 @@ export const createTransferSchema = createDepositSchema.extend({}).check(ctx => 
 });
 
 export const assets = ["ETH", "DAI"] as const;
+
 export const createSwapSchema = z
   .object({
     activeField: z.enum(assets),
     dai: z.object({
-      amount: z.string({ error: "Please enter a valid amount" }),
+      amount: z.string().min(1, { message: "Amount is required" }),
       availableBalance: z.number().nonnegative({ message: "Invalid available balance" }),
     }),
 
     eth: z.object({
-      amount: z.string({ error: "Please enter a valid amount" }),
+      amount: z.string().min(1, { message: "Amount is required" }),
       availableBalance: z.number().nonnegative({ message: "Invalid available balance" }),
       // asset: z.string({ error: "This field is required" }),
     }),

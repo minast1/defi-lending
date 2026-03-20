@@ -16,6 +16,7 @@ import { CreateSwapSchema, createSwapSchema } from "~~/lib/schema";
 
 const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance: number; daiBalance: number }) => {
   const { supportsAtomicActions } = useGetWalletCapabilities();
+
   const { executeBatch } = useBatchTx();
 
   const { writeContractAsync: writeDEXContract, isMining: isDEXMining } = useScaffoldWriteContract({
@@ -78,6 +79,15 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ethAmount, activeField, ETHprice]);
 
+  useEffect(() => {
+    if (daiBalance !== undefined) {
+      form.setValue("dai.availableBalance", daiBalance, { shouldValidate: true });
+    }
+    if (balance !== undefined) {
+      form.setValue("eth.availableBalance", balance, { shouldValidate: true });
+    }
+  }, [daiBalance, balance, form]);
+
   const handleSwap = async (data: CreateSwapSchema) => {
     if (activeField === "ETH") {
       await writeDEXContract({
@@ -114,7 +124,7 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
         try {
           await writeDaiContract({
             functionName: "approve",
-            args: [dexContract?.address, BigInt(data.dai.availableBalance)],
+            args: [dexContract?.address, BigInt(data.dai.amount)],
           });
           await writeDEXContract({
             functionName: "swap",
@@ -123,8 +133,8 @@ const SwapTab = ({ ETHprice, balance, daiBalance }: { ETHprice: number; balance:
         } catch (error) {
           console.error("Error repaying dai:", error);
         }
-      }
-    } //End of main else
+      } //End of main else
+    }
   };
 
   return (
