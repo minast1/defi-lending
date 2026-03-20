@@ -8,7 +8,6 @@ const CollateralAddedAbi = parseAbiItem(
 const useLiquidationHistory = (contractAddress: `0x${string}` | undefined, contractAbi: Abi | undefined) => {
   const publicClient = usePublicClient();
   const isReady = !!publicClient && !!contractAddress && !!contractAbi;
-
   const {
     data: events,
     isLoading,
@@ -17,9 +16,11 @@ const useLiquidationHistory = (contractAddress: `0x${string}` | undefined, contr
     queryKey: ["liquidationHistory"],
     enabled: isReady,
     queryFn: async () => {
+      const latest = await publicClient!.getBlockNumber();
+
       const logs = await publicClient!.getLogs({
         address: contractAddress as `0x${string}`,
-        fromBlock: BigInt(process.env.NEXT_PUBLIC_DEPLOYMENT_BLOCK || 0),
+        fromBlock: latest - 9999n,
         toBlock: "latest",
         event: CollateralAddedAbi,
       });
